@@ -1,101 +1,164 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React from "react";
+import { motion } from "framer-motion";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+
+// Mock data for bookings chart
+const data = [
+  { day: "Mon", bookings: 4 },
+  { day: "Tue", bookings: 8 },
+  { day: "Wed", bookings: 5 },
+  { day: "Thu", bookings: 7 },
+  { day: "Fri", bookings: 3 },
+  { day: "Sat", bookings: 6 },
+  { day: "Sun", bookings: 2 },
+];
+
+// Mock data for upcoming events
+const upcomingEvents = [
+  {
+    title: "Team Sync",
+    time: "Today 2:00 PM",
+    description: "Weekly alignment call with the entire team.",
+  },
+  {
+    title: "Client Check-In",
+    time: "Tomorrow 10:30 AM",
+    description: "Discuss new requirements and feature requests.",
+  },
+  {
+    title: "Dev Sprint Planning",
+    time: "Fri 1:00 PM",
+    description: "Plan tasks and deliverables for the upcoming sprint.",
+  },
+];
+
+// Mock data for tasks
+const tasks = [
+  {
+    name: "Fix scheduling bug",
+    status: "In Progress",
+  },
+  {
+    name: "Update user profile design",
+    status: "Completed",
+  },
+  {
+    name: "Prepare release notes",
+    status: "Pending",
+  },
+];
+
+export default function Dashboard() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className="p-4 bg-gray-50 min-h-screen">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-6"
+      >
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
+        <p className="text-gray-600">Welcome back! Here is an overview of your scheduling activity.</p>
+      </motion.div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      {/* Grid Section: Overviews */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {/* Card 1: Upcoming Events */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="bg-white rounded-2xl shadow p-4"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <h2 className="text-xl font-semibold mb-3">Upcoming Events</h2>
+          <ul>
+            {upcomingEvents.map((event, idx) => (
+              <li key={idx} className="mb-3">
+                <h3 className="text-md font-medium text-gray-700">{event.title}</h3>
+                <p className="text-sm text-gray-500">{event.time}</p>
+                <p className="text-sm text-gray-400">{event.description}</p>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+
+        {/* Card 2: Open Tasks */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-white rounded-2xl shadow p-4"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <h2 className="text-xl font-semibold mb-3">Tasks</h2>
+          <ul>
+            {tasks.map((task, idx) => (
+              <li key={idx} className="flex justify-between items-center mb-2">
+                <span className="text-gray-700">{task.name}</span>
+                <span
+                  className={`text-sm font-medium px-2 py-1 rounded-xl ${
+                    task.status === "Completed"
+                      ? "bg-green-100 text-green-600"
+                      : task.status === "In Progress"
+                      ? "bg-yellow-100 text-yellow-600"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {task.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+
+        {/* Card 3: Quick Stats (Chart) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="bg-white rounded-2xl shadow p-4"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <h2 className="text-xl font-semibold mb-3">Weekly Bookings</h2>
+          <div className="w-full h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data}>
+                <XAxis dataKey="day" stroke="#888888" />
+                <YAxis allowDecimals={false} stroke="#888888" />
+                <Tooltip contentStyle={{ backgroundColor: "#ffffff" }} />
+                <Bar dataKey="bookings" fill="#4f46e5" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Additional Info Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+        className="bg-white rounded-2xl shadow p-6"
+      >
+        <h2 className="text-xl font-semibold mb-4">Next Steps</h2>
+        <p className="text-gray-600">
+          Tailor this dashboard to your needs. Add more sections for your specific workflow:
+        </p>
+        <ul className="list-disc list-inside text-gray-600 mt-2">
+          <li>Detailed calendar views or scheduling flows</li>
+          <li>Reminders or notifications section</li>
+          <li>Team collaboration features or chat</li>
+          <li>Advanced analytics: usage statistics, scheduling patterns, etc.</li>
+        </ul>
+      </motion.div>
+    </main>
   );
 }
+
