@@ -1,15 +1,9 @@
-// app/api/testdb/route.js
-
 import pool from '../../../lib/db';
 
-// Named export for HTTP GET requests
 export async function GET(request) {
   try {
     console.log('hitting GET endpoint');
     const result = await pool.query('SELECT NOW() AS current_time;');
-
-    // Return a Next.js Response object:
-    // (Remember to set status code and headers explicitly if you want JSON)
     return new Response(
       JSON.stringify({
         success: true,
