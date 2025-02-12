@@ -8,10 +8,10 @@ datasource db {
 }
 
 model companies {
-  id                String              @id
+  id                String              @id @default(uuid())
   name              String
   createdAt         DateTime            @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime            @default(now()) @updatedAt
   custom_roles      custom_roles[]
   schedules         schedules[]
   time_off_requests time_off_requests[]
@@ -19,31 +19,31 @@ model companies {
 }
 
 model custom_roles {
-  id          String    @id
+  id          String    @id @default(uuid())
   name        String    @unique
   description String
   permissions Json      @default("{}")
   companyId   String
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime  @default(now()) @updatedAt
   companies   companies @relation(fields: [companyId], references: [id])
   users       users[]
 }
 
 model schedules {
-  id        String    @id
+  id        String    @id @default(uuid())
   userId    String
   companyId String
   startTime DateTime
   endTime   DateTime
   createdAt DateTime  @default(now())
-  updatedAt DateTime
+  updatedAt DateTime  @default(now()) @updatedAt
   companies companies @relation(fields: [companyId], references: [id])
   users     users     @relation(fields: [userId], references: [id])
 }
 
 model time_off_requests {
-  id                                        String        @id
+  id                                        String        @id @default(uuid())
   employeeId                                String
   managerId                                 String?
   companyId                                 String
@@ -53,29 +53,33 @@ model time_off_requests {
   type                                      TimeOffType
   reason                                    String?
   createdAt                                 DateTime      @default(now())
-  updatedAt                                 DateTime
+  updatedAt                                 DateTime      @default(now()) @updatedAt
   companies                                 companies     @relation(fields: [companyId], references: [id])
   users_time_off_requests_employeeIdTousers users         @relation("time_off_requests_employeeIdTousers", fields: [employeeId], references: [id])
   users_time_off_requests_managerIdTousers  users?        @relation("time_off_requests_managerIdTousers", fields: [managerId], references: [id])
 }
 
 model users {
-  id                                                    String              @id
-  email                                                 String              @unique
-  name                                                  String
-  role                                                  Role                @default(EMPLOYEE)
-  companyId                                             String
-  createdAt                                             DateTime            @default(now())
-  updatedAt                                             DateTime
-  customRoleId                                          String?
-  password                                              String
-  department                                            String              @default("N/A")
-  location                                              String              @default("N/A")
-  schedules                                             schedules[]
-  time_off_requests_time_off_requests_employeeIdTousers time_off_requests[] @relation("time_off_requests_employeeIdTousers")
-  time_off_requests_time_off_requests_managerIdTousers  time_off_requests[] @relation("time_off_requests_managerIdTousers")
-  companies                                             companies           @relation(fields: [companyId], references: [id])
-  custom_roles                                          custom_roles?       @relation(fields: [customRoleId], references: [id])
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String
+  role           Role     @default(EMPLOYEE)
+  companyId      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  customRoleId   String?
+  passwordHash   String?
+  department     String   @default("N/A")
+  location       String   @default("N/A")
+  schedules      schedules[]
+  custom_roles   custom_roles? @relation(fields: [customRoleId], references: [id])
+  
+  // Opposite field for companies.users relation.
+  company        companies?   @relation(fields: [companyId], references: [id])
+  
+  // Opposite fields for time_off_requests relations.
+  time_off_requests_as_employee time_off_requests[] @relation("time_off_requests_employeeIdTousers")
+  time_off_requests_as_manager  time_off_requests[] @relation("time_off_requests_managerIdTousers")
 }
 
 enum RequestStatus {

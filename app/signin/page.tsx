@@ -16,7 +16,7 @@ export default function SignInPage() {
       redirect: true,
       email,
       password,
-      callbackUrl: "/", // Redirect after successful sign in.
+      callbackUrl: "/dashboard", // Redirect after successful sign in.
     });
 
     // You can optionally handle errors here if result.error exists.
