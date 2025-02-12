@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model companies {
+  id                String              @id
+  name              String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  custom_roles      custom_roles[]
+  schedules         schedules[]
+  time_off_requests time_off_requests[]
+  users             users[]
+}
+
+model custom_roles {
+  id          String    @id
+  name        String    @unique
+  description String
+  permissions Json      @default("{}")
+  companyId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  companies   companies @relation(fields: [companyId], references: [id])
+  users       users[]
+}
+
+model schedules {
+  id        String    @id
+  userId    String
+  companyId String
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  companies companies @relation(fields: [companyId], references: [id])
+  users     users     @relation(fields: [userId], references: [id])
+}
+
+model time_off_requests {
+  id                                        String        @id
+  employeeId                                String
+  managerId                                 String?
+  companyId                                 String
+  startDate                                 DateTime
+  endDate                                   DateTime
+  status                                    RequestStatus @default(PENDING)
+  type                                      TimeOffType
+  reason                                    String?
+  createdAt                                 DateTime      @default(now())
+  updatedAt                                 DateTime
+  companies                                 companies     @relation(fields: [companyId], references: [id])
+  users_time_off_requests_employeeIdTousers users         @relation("time_off_requests_employeeIdTousers", fields: [employeeId], references: [id])
+  users_time_off_requests_managerIdTousers  users?        @relation("time_off_requests_managerIdTousers", fields: [managerId], references: [id])
+}
+
+model users {
+  id                                                    String              @id
+  email                                                 String              @unique
+  name                                                  String
+  role                                                  Role                @default(EMPLOYEE)
+  companyId                                             String
+  createdAt                                             DateTime            @default(now())
+  updatedAt                                             DateTime
+  customRoleId                                          String?
+  password                                              String
+  department                                            String              @default("N/A")
+  location                                              String              @default("N/A")
+  schedules                                             schedules[]
+  time_off_requests_time_off_requests_employeeIdTousers time_off_requests[] @relation("time_off_requests_employeeIdTousers")
+  time_off_requests_time_off_requests_managerIdTousers  time_off_requests[] @relation("time_off_requests_managerIdTousers")
+  companies                                             companies           @relation(fields: [companyId], references: [id])
+  custom_roles                                          custom_roles?       @relation(fields: [customRoleId], references: [id])
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Role {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  MANAGER
+  TEAM_LEAD
+  EMPLOYEE
+  CONTRACTOR
+  INTERN
+  PART_TIME
+  REMOTE
+}
+
+enum TimeOffType {
+  VACATION
+  SICK
+  PERSONAL
+}
