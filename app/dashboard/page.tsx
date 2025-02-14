@@ -1,10 +1,15 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { parse, startOfWeek, getDay, format } from "date-fns";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { PT_Serif } from "next/font/google";
+
+const ptSerif = PT_Serif({ subsets: ["latin"], weight: "700" });
+
+
 
 // Set up the date-fns localizer for React Big Calendar
 const locales = {
@@ -21,10 +26,8 @@ const localizer = dateFnsLocalizer({
 function parseTime(timeString: string) {
   const [time, meridiem] = timeString.split(/\s/);
   if (!time) return 0;
-
   let [hourStr] = time.split(":");
   let hour = parseInt(hourStr, 10);
-
   if (meridiem?.toUpperCase() === "PM" && hour !== 12) {
     hour += 12;
   } else if (meridiem?.toUpperCase() === "AM" && hour === 12) {
@@ -51,11 +54,9 @@ function buildEventsFromShifts(shiftsObj: Record<string, string>) {
     if (!shiftStr || shiftStr.toLowerCase() === "off") continue;
     const parsedShift = parseShift(shiftStr);
     if (!parsedShift) continue;
-
     const [year, month, day] = dateStr.split("-").map(Number);
     const eventStart = new Date(year, month - 1, day, parsedShift.start);
     const eventEnd = new Date(year, month - 1, day, parsedShift.end);
-
     events.push({
       title: shiftStr,
       start: eventStart,
@@ -65,13 +66,49 @@ function buildEventsFromShifts(shiftsObj: Record<string, string>) {
   return events;
 }
 
+/* -----------------------------------------------------
+   LEFT SIDE MENU COMPONENTS
+----------------------------------------------------- */
+type SideMenuItemProps = {
+  label: string;
+  bgColor: string;
+};
+
+const SideMenuItem: React.FC<SideMenuItemProps> = ({ label, bgColor }) => {
+  return (
+    <motion.div
+      className={`group flex items-center justify-center rounded-full cursor-pointer overflow-hidden ${bgColor}`}
+      initial={{ width: 50, height: 40 }}
+      whileHover={{ width: 250 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+    >
+      <span className="ml-6 text-2xl text-white font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {label}
+      </span>
+    </motion.div>
+  );
+};
+
+const SideMenu: React.FC = () => {
+  return (
+    <div className="fixed left-4 top-4 flex flex-col gap-4 z-20 p-2">
+      <SideMenuItem label="Dashboard" bgColor="bg-orange-400" />
+      <SideMenuItem label="Time Off" bgColor="bg-purple-400" />
+      <SideMenuItem label="My Info" bgColor="bg-green-400" />
+      <SideMenuItem label="Schedule Builder" bgColor="bg-red-400" />
+      <SideMenuItem label="My Team" bgColor="bg-yellow-400" />
+    </div>
+  );
+};
+
+/* -----------------------------------------------------
+   DASHBOARD PAGE
+----------------------------------------------------- */
 export default function Dashboard() {
   // =============================
   // Tab state
   // =============================
   const [activeTab, setActiveTab] = useState<"mySchedule" | "viewOthers">("mySchedule");
-
-
   const { data: session, status } = useSession();
   const userName = session?.user?.name || "Employee";
 
@@ -81,13 +118,11 @@ export default function Dashboard() {
         <p>Loading...</p>
       </main>
     );
-  }             
+  }
 
   // =============================
   // Hardcoded data for demonstration
   // =============================
-
-  // 1) Shift info
   const currentShift = "9:00 AM - 5:00 PM";
   const sickTime = "24 hrs";
   const vacationTime = "40 hrs";
@@ -97,7 +132,6 @@ export default function Dashboard() {
     { day: "Saturday", shift: "Off" },
   ];
 
-  // 2) Hardcoded monthly shifts
   const monthlyShifts: Record<string, string> = {
     "2025-02-01": "Off",
     "2025-02-02": "9:00 AM - 5:00 PM",
@@ -109,20 +143,16 @@ export default function Dashboard() {
   };
   const monthlyEvents = buildEventsFromShifts(monthlyShifts);
 
-  // 3) Hardcoded coworkers for "View Others"
   const coworkers = [
     { name: "Alice", shift: "8:00 AM - 4:00 PM" },
     { name: "John", shift: "10:00 AM - 6:00 PM" },
-    { name: "Maria", shift: "2:00 PM - 10:00 PM" },
+    { name: "Maria", shift: "2:00 AM - 10:00 PM" },
   ];
-
-
 
   // =============================
   // MY SCHEDULE TAB
   // =============================
   function MyScheduleTab() {
-    // For the daily timeline bar
     const parsedDailyShift = parseShift(currentShift);
     let dayLeftPercent = 0;
     let dayWidthPercent = 0;
@@ -131,7 +161,6 @@ export default function Dashboard() {
       dayLeftPercent = (start / 24) * 100;
       dayWidthPercent = ((end - start) / 24) * 100;
     }
-
     return (
       <>
         {/* Welcome header */}
@@ -139,7 +168,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-10"
+          className="text-center mb-10 z-10 relative"
         >
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Welcome, {userName}
@@ -150,7 +179,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Grid Container for Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl z-10 relative">
           {/* Card 1: Current Shift */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -195,39 +224,12 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* Day Timeline Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-10 w-full max-w-5xl bg-white rounded-2xl shadow p-6"
-        >
-          <h2 className="text-xl font-semibold mb-4">Today’s Timeline</h2>
-          <div className="relative w-full h-6 bg-gray-200 rounded-md">
-            {/* Green bar representing shift */}
-            {parsedDailyShift && (
-              <div
-                className="absolute top-0 bottom-0 bg-green-500 rounded-md"
-                style={{
-                  left: `${dayLeftPercent}%`,
-                  width: `${dayWidthPercent}%`,
-                }}
-              />
-            )}
-          </div>
-          <div className="flex justify-between text-sm text-gray-500 mt-1">
-            <span>12:00 AM</span>
-            <span>12:00 PM</span>
-            <span>11:59 PM</span>
-          </div>
-        </motion.div>
-
-        {/* This Month's Calendar (hardcoded shifts) */}
+        {/* This Month's Calendar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-10 w-full max-w-5xl bg-white rounded-2xl shadow p-6"
+          className="mt-10 w-full max-w-5xl bg-white rounded-2xl shadow p-6 z-10 relative"
         >
           <h2 className="text-xl font-semibold mb-4">This Month</h2>
           <Calendar
@@ -252,7 +254,7 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-5xl bg-white rounded-2xl shadow p-6"
+        className="w-full max-w-5xl bg-white rounded-2xl shadow p-6 z-10 relative"
       >
         <h2 className="text-2xl font-semibold mb-4">Others&apos; Schedules</h2>
         <ul className="space-y-3">
@@ -271,36 +273,64 @@ export default function Dashboard() {
   // Render
   // =============================
   return (
-    <main className="flex flex-col items-center justify-start min-h-screen bg-gray-50 p-6">
-      {/* Tab Buttons */}
-      <div className="flex space-x-4 mb-8">
+    <div className="relative bg-[#F9F7F4] min-h-screen overflow-hidden">
+      {/* Animated Background Circles */}
+      <motion.div
+        className="absolute w-64 h-64 bg-blue-200 rounded-full filter blur-3xl"
+        style={{ top: "-100px", left: "-100px" }}
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute w-48 h-48 bg-green-200 rounded-full filter blur-3xl"
+        style={{ bottom: "-50px", right: "-50px" }}
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Fixed Sign Out Button at Top Right */}
+      <div className="fixed top-4 right-4 z-20">
         <button
-          onClick={() => setActiveTab("mySchedule")}
-          className={
-            `px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ` +
-            (activeTab === "mySchedule"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300")
-          }
+          onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
+          className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
         >
-          My Schedule
-        </button>
-        <button
-          onClick={() => setActiveTab("viewOthers")}
-          className={
-            `px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ` +
-            (activeTab === "viewOthers"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300")
-          }
-        >
-          View Others
+          Sign Out
         </button>
       </div>
 
-      {/* Tab Content */}
-      {activeTab === "mySchedule" && <MyScheduleTab />}
-      {activeTab === "viewOthers" && <ViewOthersTab />}
-    </main>
+      {/* Left Side Menu */}
+      <SideMenu />
+
+      {/* Main Content remains centered */}
+      <main className="flex flex-col items-center justify-start p-6 z-10 relative">
+        {/* Tab Buttons */}
+        <div className="flex space-x-4 mb-8">
+          <button
+            onClick={() => setActiveTab("mySchedule")}
+            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${
+              activeTab === "mySchedule"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            My Schedule
+          </button>
+          <button
+            onClick={() => setActiveTab("viewOthers")}
+            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${
+              activeTab === "viewOthers"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            View Others
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === "mySchedule" && <MyScheduleTab />}
+        {activeTab === "viewOthers" && <ViewOthersTab />}
+      </main>
+    </div>
   );
 }
