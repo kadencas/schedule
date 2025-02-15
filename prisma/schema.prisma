@@ -8,25 +8,25 @@ datasource db {
 }
 
 model companies {
-  id                String          @id @default(uuid())
+  id                String              @id @default(uuid())
   name              String
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @default(now()) @updatedAt
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @default(now()) @updatedAt
   custom_roles      custom_roles[]
-  work_shifts       work_shifts[]
   time_off_requests time_off_requests[]
   users             users[]
+  work_shifts       work_shifts[]
 }
 
 model custom_roles {
-  id          String     @id @default(uuid())
-  name        String     @unique
+  id          String    @id @default(uuid())
+  name        String    @unique
   description String
-  permissions Json       @default("{}")
+  permissions Json      @default("{}")
   companyId   String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now()) @updatedAt
-  companies   companies  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  companies   companies @relation(fields: [companyId], references: [id])
   users       users[]
 }
 
@@ -43,63 +43,57 @@ model time_off_requests {
   createdAt                                 DateTime      @default(now())
   updatedAt                                 DateTime      @default(now()) @updatedAt
   companies                                 companies     @relation(fields: [companyId], references: [id])
-  users_time_off_requests_employeeIdTousers  users         @relation("time_off_requests_employeeIdTousers", fields: [employeeId], references: [id])
-  users_time_off_requests_managerIdTousers   users?        @relation("time_off_requests_managerIdTousers", fields: [managerId], references: [id])
+  users_time_off_requests_employeeIdTousers users         @relation("time_off_requests_employeeIdTousers", fields: [employeeId], references: [id])
+  users_time_off_requests_managerIdTousers  users?        @relation("time_off_requests_managerIdTousers", fields: [managerId], references: [id])
 }
 
 model users {
-  id             String        @id @default(uuid())
-  email          String        @unique
-  name           String
-  role           Role          @default(EMPLOYEE)
-  companyId      String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @default(now()) @updatedAt
-  customRoleId   String?
-  passwordHash   String?
-  department     String        @default("N/A")
-  location       String        @default("N/A")
-  work_shifts    work_shifts[]
-  custom_roles   custom_roles? @relation(fields: [customRoleId], references: [id])
-  
-  // Opposite field for companies.users relation.
-  company        companies?    @relation(fields: [companyId], references: [id])
-  
-  // Opposite fields for time_off_requests relations.
+  id                            String              @id @default(uuid())
+  email                         String              @unique
+  name                          String
+  role                          Role                @default(EMPLOYEE)
+  companyId                     String?
+  createdAt                     DateTime            @default(now())
+  updatedAt                     DateTime            @default(now()) @updatedAt
+  customRoleId                  String?
+  passwordHash                  String?
+  department                    String              @default("N/A")
+  location                      String              @default("N/A")
   time_off_requests_as_employee time_off_requests[] @relation("time_off_requests_employeeIdTousers")
   time_off_requests_as_manager  time_off_requests[] @relation("time_off_requests_managerIdTousers")
+  company                       companies?          @relation(fields: [companyId], references: [id])
+  custom_roles                  custom_roles?       @relation(fields: [customRoleId], references: [id])
+  work_shifts                   work_shifts[]
 }
 
 model work_shifts {
-  id                String    @id @default(uuid())
+  id                String     @id @default(uuid())
   userId            String
   companyId         String
-  shiftDate         DateTime  // Date for the first occurrence of the shift
-  startTime         DateTime  // Start time of the shift
-  endTime           DateTime  // End time of the shift
-  isRecurring       Boolean   @default(false)
-  recurrenceRule    String?   // e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR"
-  recurrenceEndDate DateTime? // Optional: when the recurrence stops
+  shiftDate         DateTime
+  startTime         DateTime
+  endTime           DateTime
+  isRecurring       Boolean    @default(false)
+  recurrenceRule    String?
+  recurrenceEndDate DateTime?
   notes             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @default(now()) @updatedAt
-  
-  companies         companies @relation(fields: [companyId], references: [id])
-  users             users     @relation(fields: [userId], references: [id])
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @default(now()) @updatedAt
   segments          segments[]
+  companies         companies  @relation(fields: [companyId], references: [id])
+  users             users      @relation(fields: [userId], references: [id])
 }
 
 model segments {
-  id          String     @id @default(uuid())
+  id          String      @id @default(uuid())
   shiftId     String
-  segmentType String     // e.g., 'meeting', 'lunch', 'deepwork'
+  segmentType String
   location    String
-  startTime   DateTime   // When the segment starts
-  endTime     DateTime   // When the segment ends
+  startTime   DateTime
+  endTime     DateTime
   notes       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now()) @updatedAt
-  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
   work_shifts work_shifts @relation(fields: [shiftId], references: [id])
 }
 
