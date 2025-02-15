@@ -1,15 +1,17 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { parse, startOfWeek, getDay, format } from "date-fns";
 import { useSession, signOut } from "next-auth/react";
+import dynamic from "next/dynamic";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { PT_Serif } from "next/font/google";
 
 const ptSerif = PT_Serif({ subsets: ["latin"], weight: "700" });
 
-
+// Dynamically import the Team component from the relative path.
+const TeamComponent = dynamic(() => import("../team/page"), { ssr: false });
 
 // Set up the date-fns localizer for React Big Calendar
 const locales = {
@@ -22,49 +24,6 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
-
-function parseTime(timeString: string) {
-  const [time, meridiem] = timeString.split(/\s/);
-  if (!time) return 0;
-  let [hourStr] = time.split(":");
-  let hour = parseInt(hourStr, 10);
-  if (meridiem?.toUpperCase() === "PM" && hour !== 12) {
-    hour += 12;
-  } else if (meridiem?.toUpperCase() === "AM" && hour === 12) {
-    hour = 0;
-  }
-  return hour;
-}
-
-// "9:00 AM - 5:00 PM" => { start: 9, end: 17 } or null if "Off"
-function parseShift(shiftString: string) {
-  if (!shiftString || shiftString.toLowerCase() === "off") {
-    return null;
-  }
-  const [startTime, endTime] = shiftString.split("-");
-  const start = parseTime(startTime.trim());
-  const end = parseTime(endTime.trim());
-  return { start, end };
-}
-
-// Build RBC event objects from a hardcoded { date: shift } map
-function buildEventsFromShifts(shiftsObj: Record<string, string>) {
-  const events = [];
-  for (const [dateStr, shiftStr] of Object.entries(shiftsObj)) {
-    if (!shiftStr || shiftStr.toLowerCase() === "off") continue;
-    const parsedShift = parseShift(shiftStr);
-    if (!parsedShift) continue;
-    const [year, month, day] = dateStr.split("-").map(Number);
-    const eventStart = new Date(year, month - 1, day, parsedShift.start);
-    const eventEnd = new Date(year, month - 1, day, parsedShift.end);
-    events.push({
-      title: shiftStr,
-      start: eventStart,
-      end: eventEnd,
-    });
-  }
-  return events;
-}
 
 /* -----------------------------------------------------
    LEFT SIDE MENU COMPONENTS
@@ -79,10 +38,10 @@ const SideMenuItem: React.FC<SideMenuItemProps> = ({ label, bgColor }) => {
     <motion.div
       className={`group flex items-center justify-center rounded-full cursor-pointer overflow-hidden ${bgColor}`}
       initial={{ width: 50, height: 40 }}
-      whileHover={{ width: 250 }}
+      whileHover={{ width: 160 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
-      <span className="ml-6 text-2xl text-white font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <span className="ml-6 text-base text-white font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         {label}
       </span>
     </motion.div>
@@ -106,11 +65,36 @@ const SideMenu: React.FC = () => {
 ----------------------------------------------------- */
 export default function Dashboard() {
   // =============================
-  // Tab state
+  // Tab state & Session
   // =============================
   const [activeTab, setActiveTab] = useState<"mySchedule" | "viewOthers">("mySchedule");
   const { data: session, status } = useSession();
   const userName = session?.user?.name || "Employee";
+
+  // =============================
+  // State for Employee's Shifts Data
+  // =============================
+  const [employeeData, setEmployeeData] = useState<{
+    name: string;
+    shifts: { startTime: string; endTime: string }[];
+  } | null>(null);
+
+  useEffect(() => {
+    async function fetchEmployeeShifts() {
+      try {
+        const res = await fetch("/api/shifts");
+        const data = await res.json();
+        // Find the shifts for the current user based on their name
+        const employee = data.employees.find((e: { name: string }) => e.name === userName);
+        setEmployeeData(employee);
+      } catch (error) {
+        console.error("Error fetching shifts:", error);
+      }
+    }
+    if (userName !== "Employee") {
+      fetchEmployeeShifts();
+    }
+  }, [userName]);
 
   if (status === "loading") {
     return (
@@ -121,61 +105,78 @@ export default function Dashboard() {
   }
 
   // =============================
-  // Hardcoded data for demonstration
-  // =============================
-  const currentShift = "9:00 AM - 5:00 PM";
-  const sickTime = "24 hrs";
-  const vacationTime = "40 hrs";
-  const upcomingSchedule = [
-    { day: "Thursday", shift: "9:00 AM - 5:00 PM" },
-    { day: "Friday", shift: "1:00 PM - 9:00 PM" },
-    { day: "Saturday", shift: "Off" },
-  ];
-
-  const monthlyShifts: Record<string, string> = {
-    "2025-02-01": "Off",
-    "2025-02-02": "9:00 AM - 5:00 PM",
-    "2025-02-03": "8:00 AM - 4:00 PM",
-    "2025-02-04": "Off",
-    "2025-02-05": "9:00 AM - 5:00 PM",
-    "2025-02-06": "1:00 PM - 6:00 PM",
-    "2025-02-07": "Off",
-  };
-  const monthlyEvents = buildEventsFromShifts(monthlyShifts);
-
-  const coworkers = [
-    { name: "Alice", shift: "8:00 AM - 4:00 PM" },
-    { name: "John", shift: "10:00 AM - 6:00 PM" },
-    { name: "Maria", shift: "2:00 AM - 10:00 PM" },
-  ];
-
-  // =============================
-  // MY SCHEDULE TAB
+  // MY SCHEDULE TAB (using real data)
   // =============================
   function MyScheduleTab() {
-    const parsedDailyShift = parseShift(currentShift);
-    let dayLeftPercent = 0;
-    let dayWidthPercent = 0;
-    if (parsedDailyShift) {
-      const { start, end } = parsedDailyShift;
-      dayLeftPercent = (start / 24) * 100;
-      dayWidthPercent = ((end - start) / 24) * 100;
+    // If no data has been loaded yet, show a loading indicator.
+    if (!employeeData) {
+      return (
+        <div className="w-full max-w-5xl text-center">
+          <p>Loading your schedule...</p>
+        </div>
+      );
     }
+
+    const today = new Date();
+
+    // Determine today's shift (if any)
+    const todaysShift = employeeData.shifts.find((shift) => {
+      const shiftStart = new Date(shift.startTime);
+      return shiftStart.toDateString() === today.toDateString();
+    });
+
+    const currentShift = todaysShift
+      ? `${format(new Date(todaysShift.startTime), "h:mm a")} - ${format(
+          new Date(todaysShift.endTime),
+          "h:mm a"
+        )}`
+      : "Off";
+
+    // Build upcoming schedule (shifts for the next 3 days, excluding today)
+    const upcomingSchedule = employeeData.shifts
+      .filter((shift) => {
+        const shiftDate = new Date(shift.startTime);
+        return (
+          shiftDate > today &&
+          shiftDate <= new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3)
+        );
+      })
+      .map((shift) => ({
+        day: format(new Date(shift.startTime), "EEEE"),
+        shift: `${format(new Date(shift.startTime), "h:mm a")} - ${format(
+          new Date(shift.endTime),
+          "h:mm a"
+        )}`,
+      }));
+
+    // Build calendar events for shifts occurring in the current month
+    const monthlyEvents = employeeData.shifts
+      .filter((shift) => {
+        const shiftDate = new Date(shift.startTime);
+        return (
+          shiftDate.getMonth() === today.getMonth() && shiftDate.getFullYear() === today.getFullYear()
+        );
+      })
+      .map((shift) => ({
+        title: `${format(new Date(shift.startTime), "h:mm a")} - ${format(
+          new Date(shift.endTime),
+          "h:mm a"
+        )}`,
+        start: new Date(shift.startTime),
+        end: new Date(shift.endTime),
+      }));
+
     return (
       <>
-        {/* Welcome header */}
+        {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center mb-10 z-10 relative"
         >
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Welcome, {userName}
-          </h1>
-          <p className="text-gray-600 text-xl">
-            Here’s a quick look at your schedule
-          </p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Welcome, {userName}</h1>
+          <p className="text-gray-600 text-xl">Here’s a quick look at your schedule</p>
         </motion.div>
 
         {/* Grid Container for Cards */}
@@ -191,7 +192,7 @@ export default function Dashboard() {
             <p className="text-gray-700 text-lg">{currentShift}</p>
           </motion.div>
 
-          {/* Card 2: Time Off Balances */}
+          {/* Card 2: Time Off Balances (still static) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -200,8 +201,8 @@ export default function Dashboard() {
           >
             <h2 className="text-xl font-semibold mb-3">Time Off Balances</h2>
             <div className="text-gray-700 text-lg space-y-2">
-              <p>Sick Time: {sickTime}</p>
-              <p>Vacation Time: {vacationTime}</p>
+              <p>Sick Time: 24 hrs</p>
+              <p>Vacation Time: 40 hrs</p>
             </div>
           </motion.div>
 
@@ -213,14 +214,18 @@ export default function Dashboard() {
             className="bg-white rounded-2xl shadow p-6"
           >
             <h2 className="text-xl font-semibold mb-3">Upcoming Schedule</h2>
-            <ul className="text-gray-700 text-lg space-y-2">
-              {upcomingSchedule.map((slot, idx) => (
-                <li key={idx} className="flex justify-between">
-                  <span>{slot.day}:</span>
-                  <span>{slot.shift}</span>
-                </li>
-              ))}
-            </ul>
+            {upcomingSchedule.length > 0 ? (
+              <ul className="text-gray-700 text-lg space-y-2">
+                {upcomingSchedule.map((slot, idx) => (
+                  <li key={idx} className="flex justify-between">
+                    <span>{slot.day}:</span>
+                    <span>{slot.shift}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No upcoming shifts</p>
+            )}
           </motion.div>
         </div>
 
@@ -246,7 +251,7 @@ export default function Dashboard() {
   }
 
   // =============================
-  // VIEW OTHERS TAB (Hardcoded)
+  // VIEW OTHERS TAB (Team Component without a box)
   // =============================
   function ViewOthersTab() {
     return (
@@ -254,17 +259,9 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-5xl bg-white rounded-2xl shadow p-6 z-10 relative"
+        className="w-full max-w-5xl z-10 relative"
       >
-        <h2 className="text-2xl font-semibold mb-4">Others&apos; Schedules</h2>
-        <ul className="space-y-3">
-          {coworkers.map((cw, idx) => (
-            <li key={idx} className="flex justify-between text-lg text-gray-700">
-              <span className="font-medium">{cw.name}</span>
-              <span>{cw.shift}</span>
-            </li>
-          ))}
-        </ul>
+        <TeamComponent />
       </motion.div>
     );
   }
