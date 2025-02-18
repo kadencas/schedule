@@ -16,6 +16,7 @@ model companies {
   work_shifts       work_shifts[]
   time_off_requests time_off_requests[]
   users             users[]
+  invitations  Invitation[]  @relation("CompanyInvitations")
 }
 
 model custom_roles {
@@ -103,6 +104,20 @@ model segments {
   work_shifts work_shifts @relation(fields: [shiftId], references: [id])
 }
 
+model Invitation {
+  id           Int                @id @default(autoincrement())
+  token        String             @unique
+  companyId    String             // Changed from Int to String
+  inviteeEmail String?            // Optional: restrict the invitation to a specific email if needed
+  expiresAt    DateTime
+  status       InvitationStatus   @default(PENDING)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  // Relation to companies model with explicit relation name.
+  company      companies          @relation("CompanyInvitations", fields: [companyId], references: [id])
+}
+
 enum RequestStatus {
   PENDING
   APPROVED
@@ -125,4 +140,10 @@ enum TimeOffType {
   VACATION
   SICK
   PERSONAL
+}
+
+enum InvitationStatus {
+  PENDING
+  USED
+  EXPIRED
 }

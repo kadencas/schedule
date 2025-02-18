@@ -2,14 +2,23 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useSession, signOut } from "next-auth/react";
 
 export default function InviteTeamMember() {
+  const { data: session, status } = useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  // While session is loading or not present, show appropriate messaging.
+  if (status === "loading") return <p>Loading...</p>;
+  if (!session) return <p>You must be logged in to invite team members.</p>;
+
+  // Get companyId from the session. Make sure your session object includes this field.
+  const companyId = session.user.companyId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +30,7 @@ export default function InviteTeamMember() {
       const res = await fetch("/api/team/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, role }),
+        body: JSON.stringify({ name, email, role, companyId }),
       });
 
       const data = await res.json();
@@ -121,3 +130,4 @@ export default function InviteTeamMember() {
     </motion.div>
   );
 }
+

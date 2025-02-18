@@ -30,8 +30,12 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 
-        // If valid, return a minimal user object.
-        return { id: user.id, name: user.name, email: user.email };
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          companyId: user.companyId, 
+        };
       },
     }),
     // You can add additional OAuth providers here if needed.
@@ -41,13 +45,17 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      // When a user object is available (on first sign-in), attach the user id to the token.
-      if (user) token.id = user.id;
+      if (user) {
+        token.id = user.id;
+        token.companyId = user.companyId;
+      }
       return token;
     },
     async session({ session, token }) {
-      // Expose the user id on the session object for client components.
-      if (token) session.user.id = token.id as string;
+      if (token) {
+        session.user.id = token.id as string;
+        session.user.companyId = token.companyId as number;
+      }
       return session;
     },
   },

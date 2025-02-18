@@ -10,8 +10,9 @@ import { PT_Serif } from "next/font/google";
 
 const ptSerif = PT_Serif({ subsets: ["latin"], weight: "700" });
 
-// Dynamically import the Team component from the relative path.
+// Dynamically import the components for the "View Day" and "View Week" tabs.
 const TeamComponent = dynamic(() => import("../team/page"), { ssr: false });
+const WeekComponent = dynamic(() => import("../week/page"), { ssr: false });
 
 // Set up the date-fns localizer for React Big Calendar
 const locales = {
@@ -67,7 +68,7 @@ export default function Dashboard() {
   // =============================
   // Tab state & Session
   // =============================
-  const [activeTab, setActiveTab] = useState<"mySchedule" | "viewOthers">("mySchedule");
+  const [activeTab, setActiveTab] = useState<"mySchedule" | "viewDay" | "viewWeek">("mySchedule");
   const { data: session, status } = useSession();
   const userName = session?.user?.name || "Employee";
 
@@ -258,9 +259,9 @@ export default function Dashboard() {
   }
 
   // =============================
-  // VIEW OTHERS TAB (Team Component)
+  // VIEW DAY TAB (formerly "View Others")
   // =============================
-  function ViewOthersTab() {
+  function ViewDayTab() {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -269,6 +270,23 @@ export default function Dashboard() {
         className="w-full max-w-5xl z-10 relative"
       >
         <TeamComponent />
+      </motion.div>
+    );
+  }
+
+  // =============================
+  // VIEW WEEK TAB (new tab)
+  // =============================
+  function ViewWeekTab() {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        // Increased container width here with max-w-7xl
+        className="w-full max-w-10xl z-10 relative"
+      >
+        <WeekComponent />
       </motion.div>
     );
   }
@@ -323,22 +341,32 @@ export default function Dashboard() {
             My Schedule
           </button>
           <button
-            onClick={() => setActiveTab("viewOthers")}
+            onClick={() => setActiveTab("viewDay")}
             className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${
-              activeTab === "viewOthers"
+              activeTab === "viewDay"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
-            View Others
+            View Day
+          </button>
+          <button
+            onClick={() => setActiveTab("viewWeek")}
+            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${
+              activeTab === "viewWeek"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            View Week
           </button>
         </div>
 
         {/* Tab Content */}
         {activeTab === "mySchedule" && <MyScheduleTab />}
-        {activeTab === "viewOthers" && <ViewOthersTab />}
+        {activeTab === "viewDay" && <ViewDayTab />}
+        {activeTab === "viewWeek" && <ViewWeekTab />}
       </main>
     </div>
   );
 }
-

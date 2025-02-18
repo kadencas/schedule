@@ -1,10 +1,14 @@
-// app/signup/page.tsx
 "use client";
 
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 export default function SignUpPage() {
+  // Retrieve the invitation token from the URL query parameters.
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get("invite") || "";
+
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -16,13 +20,13 @@ export default function SignUpPage() {
     setLoading(true);
     setErrorMsg("");
 
-    // Call your signup API route.
+    // Include inviteToken in the payload.
     const res = await fetch("/api/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, name, password }),
+      body: JSON.stringify({ email, name, password, inviteToken }),
     });
 
     setLoading(false);
@@ -33,8 +37,7 @@ export default function SignUpPage() {
       return;
     }
 
-    // Optionally, auto-sign-in the user after registration.
-    // In this example, we use NextAuth's signIn function with the credentials provider.
+    // Optionally auto-sign in the user after successful registration.
     signIn("credentials", {
       email,
       password,
