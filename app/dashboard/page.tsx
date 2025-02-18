@@ -96,6 +96,24 @@ export default function Dashboard() {
     }
   }, [userName]);
 
+  // =============================
+  // State for Company Name
+  // =============================
+  const [companyName, setCompanyName] = useState("");
+
+  useEffect(() => {
+    async function fetchCompanyName() {
+      try {
+        const res = await fetch("/api/company");
+        const data = await res.json();
+        setCompanyName(data.name);
+      } catch (error) {
+        console.error("Error fetching company name:", error);
+      }
+    }
+    fetchCompanyName();
+  }, []);
+
   if (status === "loading") {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -108,7 +126,6 @@ export default function Dashboard() {
   // MY SCHEDULE TAB (using real data)
   // =============================
   function MyScheduleTab() {
-    // If no data has been loaded yet, show a loading indicator.
     if (!employeeData) {
       return (
         <div className="w-full max-w-5xl text-center">
@@ -118,8 +135,6 @@ export default function Dashboard() {
     }
 
     const today = new Date();
-
-    // Determine today's shift (if any)
     const todaysShift = employeeData.shifts.find((shift) => {
       const shiftStart = new Date(shift.startTime);
       return shiftStart.toDateString() === today.toDateString();
@@ -132,7 +147,6 @@ export default function Dashboard() {
         )}`
       : "Off";
 
-    // Build upcoming schedule (shifts for the next 3 days, excluding today)
     const upcomingSchedule = employeeData.shifts
       .filter((shift) => {
         const shiftDate = new Date(shift.startTime);
@@ -149,7 +163,6 @@ export default function Dashboard() {
         )}`,
       }));
 
-    // Build calendar events for shifts occurring in the current month
     const monthlyEvents = employeeData.shifts
       .filter((shift) => {
         const shiftDate = new Date(shift.startTime);
@@ -168,7 +181,6 @@ export default function Dashboard() {
 
     return (
       <>
-        {/* Welcome Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -179,9 +191,7 @@ export default function Dashboard() {
           <p className="text-gray-600 text-xl">Here’s a quick look at your schedule</p>
         </motion.div>
 
-        {/* Grid Container for Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl z-10 relative">
-          {/* Card 1: Current Shift */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -192,7 +202,6 @@ export default function Dashboard() {
             <p className="text-gray-700 text-lg">{currentShift}</p>
           </motion.div>
 
-          {/* Card 2: Time Off Balances (still static) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -206,7 +215,6 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Card 3: Upcoming Schedule */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -229,7 +237,6 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
-        {/* This Month's Calendar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -251,7 +258,7 @@ export default function Dashboard() {
   }
 
   // =============================
-  // VIEW OTHERS TAB (Team Component without a box)
+  // VIEW OTHERS TAB (Team Component)
   // =============================
   function ViewOthersTab() {
     return (
@@ -271,7 +278,6 @@ export default function Dashboard() {
   // =============================
   return (
     <div className="relative bg-[#F9F7F4] min-h-screen overflow-hidden">
-      {/* Animated Background Circles */}
       <motion.div
         className="absolute w-64 h-64 bg-blue-200 rounded-full filter blur-3xl"
         style={{ top: "-100px", left: "-100px" }}
@@ -285,7 +291,6 @@ export default function Dashboard() {
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Fixed Sign Out Button at Top Right */}
       <div className="fixed top-4 right-4 z-20">
         <button
           onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
@@ -295,11 +300,16 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Left Side Menu */}
       <SideMenu />
 
-      {/* Main Content remains centered */}
       <main className="flex flex-col items-center justify-start p-6 z-10 relative">
+        {/* Company Name Display */}
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-800">
+            {companyName || "Loading Company..."}
+          </h1>
+        </div>
+
         {/* Tab Buttons */}
         <div className="flex space-x-4 mb-8">
           <button
@@ -331,3 +341,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

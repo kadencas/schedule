@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import React, { useState } from "react";
+import Link from "next/link";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -80,7 +81,14 @@ export default function SignInPage() {
             Sign In
           </motion.button>
         </form>
+        <p className="mt-6 text-center">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="text-blue-600 hover:underline">
+            Sign Up
+          </Link>
+        </p>
       </motion.div>
     </div>
   );
 }
+
