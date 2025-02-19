@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -26,6 +28,25 @@ export default function SignInPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-[#F9F7F4] px-6 overflow-hidden">
+      {/* Back Button */}
+      <motion.button
+        onClick={() => router.back()}
+        className="absolute top-6 left-6 flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors z-20"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Back</span>
+      </motion.button>
+
       {/* Animated Background Circles */}
       <motion.div
         className="absolute w-64 h-64 bg-blue-200 rounded-full filter blur-3xl"
@@ -82,13 +103,21 @@ export default function SignInPage() {
           </motion.button>
         </form>
         <p className="mt-6 text-center">
-          Don&apos;t have an account?{" "}
+          Don't have an account?
+          <br />
+          <br />
           <Link href="/signup" className="text-blue-600 hover:underline">
-            Sign Up
+            Join an Existing Organization
+          </Link>
+          <br />
+          <br />
+          <hr />
+          <br />
+          <Link href="/signup" className="text-green-600 hover:underline">
+            Start an Organization
           </Link>
         </p>
       </motion.div>
     </div>
   );
 }
-

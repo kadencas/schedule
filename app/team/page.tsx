@@ -9,22 +9,31 @@ const hours = Array.from({ length: 14 }, (_, i) => {
   return { numeric, label: `${hour12} ${period}` };
 });
 
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const days = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 // Helper function to get the most recent Monday based on today's date.
 const getMostRecentMonday = (date: Date): Date => {
   const day = date.getDay(); // 0 (Sun) - 6 (Sat)
-  // If today is Sunday (0), subtract 6 days; otherwise, subtract (day - 1) days.
   const diff = day === 0 ? 6 : day - 1;
   const monday = new Date(date);
   monday.setDate(date.getDate() - diff);
   return monday;
 };
 
-// NEW HELPER: Given an hour, the shifts, and the selected date,
-// check if that hour falls within a shift and, if so, whether it
-// falls within a segment. If a segment exists, return it (with type info)
-// so we can style it accordingly.
+/**
+ * getCellContent:
+ * Used for each Employee cell. 
+ * If the segment has a location (Desk 1, Desk 2, Desk 3), we color it accordingly 
+ * and display the segmentType as text in the cell.
+ */
 const getCellContent = (
   hour: number,
   shifts: Array<{
@@ -34,6 +43,7 @@ const getCellContent = (
       startTime: string;
       endTime: string;
       segmentType: string;
+      location?: string;
     }>;
   }>,
   selectedDate: Date
@@ -41,45 +51,88 @@ const getCellContent = (
   for (const shift of shifts) {
     const shiftStart = new Date(shift.startTime);
     const shiftEnd = new Date(shift.endTime);
-    // Only consider shifts that occur on the selected date.
+
+    // Only consider shifts that occur on the selected date
     if (shiftStart.toLocaleDateString() !== selectedDate.toLocaleDateString()) {
       continue;
     }
-    // Check if the hour is within the shift's start and end hours.
+
+    // Check if the hour is within the shift's start and end hours
     if (hour >= shiftStart.getHours() && hour < shiftEnd.getHours()) {
-      // If the shift has segments, check if the hour falls within any segment.
+      // Look for a segment covering this hour
       if (shift.segments && shift.segments.length > 0) {
         const segment = shift.segments.find((seg) => {
           const segStart = new Date(seg.startTime);
           const segEnd = new Date(seg.endTime);
           return hour >= segStart.getHours() && hour < segEnd.getHours();
         });
+
         if (segment) {
-          // Determine styling based on the segment type.
-          let bgColorClass = "";
-          switch (segment.segmentType.toLowerCase()) {
-            case "lunch":
-              bgColorClass = "bg-green-200 text-green-800";
-              break;
-            case "meeting":
-              bgColorClass = "bg-yellow-200 text-yellow-800";
-              break;
-            case "deepwork":
-              bgColorClass = "bg-purple-200 text-purple-800";
-              break;
-            default:
-              bgColorClass = "bg-blue-200 text-blue-800";
+          // If this segment has a location, override the color with that desk's color
+          if (segment.location) {
+            const label = segment.segmentType || "Work"; // fallback if no segmentType
+            switch (segment.location) {
+              case "Desk 1":
+                return (
+                  <span
+                    className="bg-red-200 text-red-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
+                  >
+                    {label}
+                  </span>
+                );
+              case "Desk 2":
+                return (
+                  <span
+                    className="bg-yellow-200 text-yellow-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
+                  >
+                    {label}
+                  </span>
+                );
+              case "Desk 3":
+                return (
+                  <span
+                    className="bg-green-200 text-green-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
+                  >
+                    {label}
+                  </span>
+                );
+              default:
+                // If there's some other desk name not in Desk 1/2/3, just fallback
+                return (
+                  <span
+                    className="bg-blue-200 text-blue-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
+                  >
+                    {label}
+                  </span>
+                );
+            }
+          } else {
+            // No location => color by segmentType
+            let bgColorClass = "";
+            switch (segment.segmentType.toLowerCase()) {
+              case "lunch":
+                bgColorClass = "bg-green-200 text-green-800";
+                break;
+              case "meeting":
+                bgColorClass = "bg-yellow-200 text-yellow-800";
+                break;
+              case "deepwork":
+                bgColorClass = "bg-purple-200 text-purple-800";
+                break;
+              default:
+                bgColorClass = "bg-blue-200 text-blue-800";
+            }
+            return (
+              <span
+                className={`${bgColorClass} rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs`}
+              >
+                {segment.segmentType}
+              </span>
+            );
           }
-          return (
-            <span
-              className={`${bgColorClass} rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs`}
-            >
-              {segment.segmentType}
-            </span>
-          );
         }
       }
-      // If no segment is found, show the generic "Work" indicator.
+      // If no segment is found, show the generic "Work"
       return (
         <span className="bg-blue-200 text-blue-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs">
           Work
@@ -87,13 +140,86 @@ const getCellContent = (
       );
     }
   }
+  // Outside any shifts
   return null;
 };
+
+// This helper is for the Location (Desk) rows themselves
+function getDeskCellContent(
+  desk: string,
+  hour: number,
+  scheduleData: Array<{
+    name: string;
+    shifts: Array<{
+      startTime: string;
+      endTime: string;
+      segments?: Array<{
+        startTime: string;
+        endTime: string;
+        segmentType: string;
+        location?: string;
+      }>;
+    }>;
+  }>,
+  selectedDate: Date
+) {
+  const employeesAtDesk: string[] = [];
+
+  scheduleData.forEach((employee) => {
+    employee.shifts.forEach((shift) => {
+      const shiftStart = new Date(shift.startTime);
+      const shiftEnd = new Date(shift.endTime);
+
+      // Only consider shifts on the selected date
+      if (shiftStart.toLocaleDateString() !== selectedDate.toLocaleDateString()) {
+        return;
+      }
+      if (hour >= shiftStart.getHours() && hour < shiftEnd.getHours()) {
+        // If location is stored in segments:
+        if (shift.segments && shift.segments.length > 0) {
+          shift.segments.forEach((seg) => {
+            const segStart = new Date(seg.startTime);
+            const segEnd = new Date(seg.endTime);
+            if (hour >= segStart.getHours() && hour < segEnd.getHours()) {
+              if (seg.location === desk) {
+                employeesAtDesk.push(employee.name);
+              }
+            }
+          });
+        }
+      }
+    });
+  });
+
+  if (employeesAtDesk.length === 0) return null;
+
+  // Decide color based on desk
+  let bgColorClass = "";
+  if (desk === "Desk 1") {
+    bgColorClass = "bg-red-200 text-red-800";
+  } else if (desk === "Desk 2") {
+    bgColorClass = "bg-yellow-200 text-yellow-800";
+  } else if (desk === "Desk 3") {
+    bgColorClass = "bg-green-200 text-green-800";
+  } else {
+    // fallback if there's some other desk name
+    bgColorClass = "bg-blue-200 text-blue-800";
+  }
+
+  return (
+    <div
+      className={`${bgColorClass} rounded w-full h-full flex flex-col items-center justify-center text-xs p-1`}
+    >
+      {employeesAtDesk.map((emp, idx) => (
+        <div key={idx}>{emp}</div>
+      ))}
+    </div>
+  );
+}
 
 const defaultSelectedDay = (() => {
   const today = new Date();
   const dayNumber = today.getDay(); // 0 (Sun) to 6 (Sat)
-  // Convert to index for the `days` array where Monday is at index 0.
   return dayNumber === 0 ? "Sunday" : days[dayNumber - 1];
 })();
 
@@ -105,11 +231,11 @@ const ScheduleTable = () => {
       shifts: Array<{
         startTime: string;
         endTime: string;
-        // Make sure your API returns segments for each shift!
         segments?: Array<{
           startTime: string;
           endTime: string;
           segmentType: string;
+          location?: string;
         }>;
       }>;
     }>
@@ -139,7 +265,6 @@ const ScheduleTable = () => {
         console.error("Error fetching shift data:", error);
       }
     };
-
     fetchShifts();
   }, []);
 
@@ -147,7 +272,9 @@ const ScheduleTable = () => {
     <div className="p-6 bg-white shadow-md rounded-lg">
       {/* Centered label above the week tabs */}
       <div className="flex justify-center mb-4">
-        <span className="text-lg font-medium">Week of: {formattedMondayDate}</span>
+        <span className="text-lg font-medium">
+          Week of: {formattedMondayDate}
+        </span>
       </div>
 
       {/* Centered Week Tabs with dynamic date labels */}
@@ -155,7 +282,7 @@ const ScheduleTable = () => {
         {days.map((day, index) => {
           const currentDayDate = new Date(mondayDate);
           currentDayDate.setDate(mondayDate.getDate() + index);
-          // Format the date as "M/D" (e.g., "2/10")
+          // Format the date as "M/D"
           const formattedDate = currentDayDate.toLocaleDateString("en-US", {
             month: "numeric",
             day: "numeric",
@@ -176,25 +303,37 @@ const ScheduleTable = () => {
         })}
       </div>
 
-      <table className="min-w-full border-collapse">
+      {/* Use table-fixed to force equal column widths */}
+      <table className="w-full table-fixed border-collapse">
         <thead className="bg-gray-500 text-white">
           <tr>
-            {/* The first column header labeled "Locations" */}
-            <th className="border border-gray-300 px-4 py-2">Locations</th>
+            {/* The first column header labeled "Locations" (fixed width via Tailwind) */}
+            <th className="border border-gray-300 px-2 py-2 w-24">Locations</th>
             {hours.map((hour) => (
-              <th key={hour.numeric} className="border border-gray-300 px-4 py-2 text-sm">
+              <th
+                key={hour.numeric}
+                className="border border-gray-300 px-2 py-2 text-sm w-1/12"
+              >
                 {hour.label}
               </th>
             ))}
           </tr>
         </thead>
+
         <tbody>
           {/* Location Rows */}
           {["Desk 1", "Desk 2", "Desk 3"].map((desk) => (
             <tr key={desk} className="bg-gray-100 border-b border-gray-400">
-              <td className="border border-gray-300 px-4 py-2 font-semibold">{desk}</td>
+              <td className="border border-gray-300 px-2 py-2 font-semibold h-12">
+                {desk}
+              </td>
               {hours.map((hour) => (
-                <td key={hour.numeric} className="border border-gray-300 px-4 py-2"></td>
+                <td
+                  key={hour.numeric}
+                  className="border border-gray-300 px-1 py-1 relative h-12"
+                >
+                  {getDeskCellContent(desk, hour.numeric, scheduleData, selectedDate)}
+                </td>
               ))}
             </tr>
           ))}
@@ -206,11 +345,13 @@ const ScheduleTable = () => {
 
           {/* Separator Row with label "Employees" and replicated time labels */}
           <tr className="bg-white">
-            <td className="border border-gray-300 px-4 py-2 font-semibold">Employees</td>
+            <td className="border border-gray-300 px-2 py-2 font-semibold w-24 h-12">
+              Employees
+            </td>
             {hours.map((hour) => (
               <td
                 key={hour.numeric}
-                className="border border-gray-300 px-4 py-2 text-sm text-gray-600 text-center"
+                className="border border-gray-300 px-2 py-2 text-sm text-gray-600 text-center w-1/12 h-12"
               >
                 {hour.label}
               </td>
@@ -220,9 +361,14 @@ const ScheduleTable = () => {
           {/* Employee Rows */}
           {scheduleData.map((employee, index) => (
             <tr key={index} className="border border-gray-300">
-              <td className="border border-gray-300 px-4 py-2 font-semibold">{employee.name}</td>
+              <td className="border border-gray-300 px-2 py-2 font-semibold h-12">
+                {employee.name}
+              </td>
               {hours.map((hour) => (
-                <td key={hour.numeric} className="border border-gray-300 px-4 py-2 relative">
+                <td
+                  key={hour.numeric}
+                  className="border border-gray-300 px-1 py-1 relative h-12"
+                >
                   {getCellContent(hour.numeric, employee.shifts, selectedDate)}
                 </td>
               ))}
@@ -235,4 +381,3 @@ const ScheduleTable = () => {
 };
 
 export default ScheduleTable;
-

@@ -60,6 +60,7 @@ model users {
   passwordHash   String?
   department     String        @default("N/A")
   location       String        @default("N/A")
+  hoursAllowed   Float         @default(40.0)
   work_shifts    work_shifts[]
   custom_roles   custom_roles? @relation(fields: [customRoleId], references: [id])
   

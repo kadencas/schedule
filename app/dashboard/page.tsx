@@ -10,9 +10,12 @@ import { PT_Serif } from "next/font/google";
 
 const ptSerif = PT_Serif({ subsets: ["latin"], weight: "700" });
 
-// Dynamically import the components for the "View Day" and "View Week" tabs.
+// Dynamically import the components for the other tabs:
 const TeamComponent = dynamic(() => import("../team/page"), { ssr: false });
 const WeekComponent = dynamic(() => import("../week/page"), { ssr: false });
+const PeopleComponent = dynamic(() => import("../orginization/page"), { ssr: false });
+// Dynamically import the Schedule Builder component
+const ScheduleBuilderComponent = dynamic(() => import("../builder/page"), { ssr: false });
 
 // Set up the date-fns localizer for React Big Calendar
 const locales = {
@@ -52,11 +55,12 @@ const SideMenuItem: React.FC<SideMenuItemProps> = ({ label, bgColor }) => {
 const SideMenu: React.FC = () => {
   return (
     <div className="fixed left-4 top-4 flex flex-col gap-4 z-20 p-2">
-      <SideMenuItem label="Dashboard" bgColor="bg-orange-400" />
+      {/*<SideMenuItem label="Dashboard" bgColor="bg-orange-400" />
       <SideMenuItem label="Time Off" bgColor="bg-purple-400" />
       <SideMenuItem label="My Info" bgColor="bg-green-400" />
       <SideMenuItem label="Schedule Builder" bgColor="bg-red-400" />
       <SideMenuItem label="My Team" bgColor="bg-yellow-400" />
+      */}
     </div>
   );
 };
@@ -67,8 +71,11 @@ const SideMenu: React.FC = () => {
 export default function Dashboard() {
   // =============================
   // Tab state & Session
+  // Updated to include "scheduleEditor" in the union type
   // =============================
-  const [activeTab, setActiveTab] = useState<"mySchedule" | "viewDay" | "viewWeek">("mySchedule");
+  const [activeTab, setActiveTab] = useState<"mySchedule" | "viewDay" | "viewWeek" | "people" | "scheduleEditor">(
+    "mySchedule"
+  );
   const { data: session, status } = useSession();
   const userName = session?.user?.name || "Employee";
 
@@ -86,7 +93,9 @@ export default function Dashboard() {
         const res = await fetch("/api/shifts");
         const data = await res.json();
         // Find the shifts for the current user based on their name
-        const employee = data.employees.find((e: { name: string }) => e.name === userName);
+        const employee = data.employees.find(
+          (e: { name: string }) => e.name === userName
+        );
         setEmployeeData(employee);
       } catch (error) {
         console.error("Error fetching shifts:", error);
@@ -124,7 +133,7 @@ export default function Dashboard() {
   }
 
   // =============================
-  // MY SCHEDULE TAB (using real data)
+  // MY SCHEDULE TAB
   // =============================
   function MyScheduleTab() {
     if (!employeeData) {
@@ -153,7 +162,11 @@ export default function Dashboard() {
         const shiftDate = new Date(shift.startTime);
         return (
           shiftDate > today &&
-          shiftDate <= new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3)
+          shiftDate <= new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() + 3
+          )
         );
       })
       .map((shift) => ({
@@ -168,7 +181,8 @@ export default function Dashboard() {
       .filter((shift) => {
         const shiftDate = new Date(shift.startTime);
         return (
-          shiftDate.getMonth() === today.getMonth() && shiftDate.getFullYear() === today.getFullYear()
+          shiftDate.getMonth() === today.getMonth() &&
+          shiftDate.getFullYear() === today.getFullYear()
         );
       })
       .map((shift) => ({
@@ -189,7 +203,7 @@ export default function Dashboard() {
           className="text-center mb-10 z-10 relative"
         >
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Welcome, {userName}</h1>
-          <p className="text-gray-600 text-xl">Here’s a quick look at your schedule</p>
+          <p className="text-gray-600 text-xl">Here's a quick look at your schedule</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl z-10 relative">
@@ -259,7 +273,7 @@ export default function Dashboard() {
   }
 
   // =============================
-  // VIEW DAY TAB (formerly "View Others")
+  // VIEW DAY TAB
   // =============================
   function ViewDayTab() {
     return (
@@ -275,7 +289,7 @@ export default function Dashboard() {
   }
 
   // =============================
-  // VIEW WEEK TAB (new tab)
+  // VIEW WEEK TAB
   // =============================
   function ViewWeekTab() {
     return (
@@ -283,10 +297,41 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        // Increased container width here with max-w-7xl
         className="w-full max-w-10xl z-10 relative"
       >
         <WeekComponent />
+      </motion.div>
+    );
+  }
+
+  // =============================
+  // PEOPLE TAB
+  // =============================
+  function PeopleTab() {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-10xl z-10 relative"
+      >
+        <PeopleComponent />
+      </motion.div>
+    );
+  }
+
+  // =============================
+  // SCHEDULE EDITOR TAB
+  // =============================
+  function ScheduleEditorTab() {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-10xl z-10 relative"
+      >
+        <ScheduleBuilderComponent />
       </motion.div>
     );
   }
@@ -360,12 +405,35 @@ export default function Dashboard() {
           >
             View Week
           </button>
+          <button
+            onClick={() => setActiveTab("people")}
+            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${
+              activeTab === "people"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            People
+          </button>
+          {/* New Schedule Editor Tab Button */}
+          <button
+            onClick={() => setActiveTab("scheduleEditor")}
+            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${
+              activeTab === "scheduleEditor"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Schedule Editor
+          </button>
         </div>
 
         {/* Tab Content */}
         {activeTab === "mySchedule" && <MyScheduleTab />}
         {activeTab === "viewDay" && <ViewDayTab />}
         {activeTab === "viewWeek" && <ViewWeekTab />}
+        {activeTab === "people" && <PeopleTab />}
+        {activeTab === "scheduleEditor" && <ScheduleEditorTab />}
       </main>
     </div>
   );

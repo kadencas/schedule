@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "hoursAllowed" DOUBLE PRECISION NOT NULL DEFAULT 40.0;
