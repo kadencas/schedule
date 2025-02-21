@@ -74,34 +74,25 @@ const getCellContent = (
             switch (segment.location) {
               case "Desk 1":
                 return (
-                  <span
-                    className="bg-red-200 text-red-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
-                  >
+                  <span className="bg-red-200 text-red-800 rounded absolute inset-0 flex items-center justify-center w-[95%] h-[90%] m-auto text-xs">
                     {label}
                   </span>
                 );
               case "Desk 2":
                 return (
-                  <span
-                    className="bg-yellow-200 text-yellow-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
-                  >
+                  <span className="bg-yellow-200 text-yellow-800 rounded absolute inset-0 flex items-center justify-center w-[95%] h-[90%] m-auto text-xs">
                     {label}
                   </span>
                 );
               case "Desk 3":
                 return (
-                  <span
-                    className="bg-green-200 text-green-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
-                  >
+                  <span className="bg-green-200 text-green-800 rounded absolute inset-0 flex items-center justify-center w-[95%] h-[90%] m-auto text-xs">
                     {label}
                   </span>
                 );
               default:
-                // If there's some other desk name not in Desk 1/2/3, just fallback
                 return (
-                  <span
-                    className="bg-blue-200 text-blue-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs"
-                  >
+                  <span className="bg-blue-200 text-blue-800 rounded absolute inset-0 flex items-center justify-center w-[95%] h-[90%] m-auto text-xs">
                     {label}
                   </span>
                 );
@@ -124,7 +115,7 @@ const getCellContent = (
             }
             return (
               <span
-                className={`${bgColorClass} rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs`}
+                className={`${bgColorClass} rounded absolute inset-0 flex items-center justify-center w-[95%] h-[90%] m-auto text-xs`}
               >
                 {segment.segmentType}
               </span>
@@ -134,7 +125,7 @@ const getCellContent = (
       }
       // If no segment is found, show the generic "Work"
       return (
-        <span className="bg-blue-200 text-blue-800 rounded absolute inset-0 flex items-center justify-center w-[90%] h-[90%] m-auto text-xs">
+        <span className="bg-blue-200 text-blue-800 rounded absolute inset-0 flex items-center justify-center w-[95%] h-[90%] m-auto text-xs">
           Work
         </span>
       );
@@ -202,18 +193,15 @@ function getDeskCellContent(
   } else if (desk === "Desk 3") {
     bgColorClass = "bg-green-200 text-green-800";
   } else {
-    // fallback if there's some other desk name
     bgColorClass = "bg-blue-200 text-blue-800";
   }
 
   return (
-    <div
-      className={`${bgColorClass} rounded w-full h-full flex flex-col items-center justify-center text-xs p-1`}
-    >
-      {employeesAtDesk.map((emp, idx) => (
-        <div key={idx}>{emp}</div>
-      ))}
-    </div>
+<div className={`${bgColorClass} rounded absolute inset-0 flex flex-col items-center justify-center w-[95%] h-[90%] m-auto text-xs`}>
+  {employeesAtDesk.map((emp, idx) => (
+    <div key={idx}>{emp}</div>
+  ))}
+</div>
   );
 }
 
@@ -224,6 +212,11 @@ const defaultSelectedDay = (() => {
 })();
 
 const ScheduleTable = () => {
+  // State for week navigation
+  const [currentMonday, setCurrentMonday] = useState<Date>(
+    getMostRecentMonday(new Date())
+  );
+
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
   const [scheduleData, setScheduleData] = useState<
     Array<{
@@ -241,10 +234,21 @@ const ScheduleTable = () => {
     }>
   >([]);
 
-  // Compute the most recent Monday.
-  const today = new Date();
-  const mondayDate = getMostRecentMonday(today);
-  const formattedMondayDate = mondayDate.toLocaleDateString("en-US", {
+  // Handlers for navigating weeks.
+  const handlePreviousWeek = () => {
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(newMonday.getDate() - 7);
+    setCurrentMonday(newMonday);
+  };
+
+  const handleNextWeek = () => {
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(newMonday.getDate() + 7);
+    setCurrentMonday(newMonday);
+  };
+
+  // Compute the formatted Monday date from currentMonday state.
+  const formattedMondayDate = currentMonday.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -252,8 +256,8 @@ const ScheduleTable = () => {
 
   // Compute the actual date for the selected day.
   const selectedDayIndex = days.indexOf(selectedDay);
-  const selectedDate = new Date(mondayDate);
-  selectedDate.setDate(mondayDate.getDate() + selectedDayIndex);
+  const selectedDate = new Date(currentMonday);
+  selectedDate.setDate(currentMonday.getDate() + selectedDayIndex);
 
   useEffect(() => {
     const fetchShifts = async () => {
@@ -270,19 +274,30 @@ const ScheduleTable = () => {
 
   return (
     <div className="p-6 bg-white shadow-md rounded-lg">
-      {/* Centered label above the week tabs */}
-      <div className="flex justify-center mb-4">
+      {/* Week Navigation */}
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={handlePreviousWeek}
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Previous Week
+        </button>
         <span className="text-lg font-medium">
           Week of: {formattedMondayDate}
         </span>
+        <button
+          onClick={handleNextWeek}
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Next Week
+        </button>
       </div>
 
       {/* Centered Week Tabs with dynamic date labels */}
       <div className="flex justify-center space-x-4 mb-6">
         {days.map((day, index) => {
-          const currentDayDate = new Date(mondayDate);
-          currentDayDate.setDate(mondayDate.getDate() + index);
-          // Format the date as "M/D"
+          const currentDayDate = new Date(currentMonday);
+          currentDayDate.setDate(currentMonday.getDate() + index);
           const formattedDate = currentDayDate.toLocaleDateString("en-US", {
             month: "numeric",
             day: "numeric",
@@ -319,7 +334,6 @@ const ScheduleTable = () => {
             ))}
           </tr>
         </thead>
-
         <tbody>
           {/* Location Rows */}
           {["Desk 1", "Desk 2", "Desk 3"].map((desk) => (
@@ -332,7 +346,12 @@ const ScheduleTable = () => {
                   key={hour.numeric}
                   className="border border-gray-300 px-1 py-1 relative h-12"
                 >
-                  {getDeskCellContent(desk, hour.numeric, scheduleData, selectedDate)}
+                  {getDeskCellContent(
+                    desk,
+                    hour.numeric,
+                    scheduleData,
+                    selectedDate
+                  )}
                 </td>
               ))}
             </tr>

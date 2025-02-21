@@ -104,19 +104,22 @@ export default function SignInPage() {
         </form>
         <p className="mt-6 text-center">
           Don't have an account?
-          <br />
-          <br />
-          <Link href="/signup" className="text-blue-600 hover:underline">
-            Join an Existing Organization
-          </Link>
-          <br />
-          <br />
-          <hr />
-          <br />
-          <Link href="/signup" className="text-green-600 hover:underline">
-            Start an Organization
-          </Link>
         </p>
+
+        <p className="mt-6 text-center">
+          <Link href="/signup" className="text-green-600 hover:underline">
+            Start an orginization
+          </Link>
+          </p>
+
+          <p className="mt-6 text-center">
+          <Link href="/signup" className="text-blue-600 hover:underline">
+            Join an existing orginization
+          </Link>
+          </p>
+
+
+
       </motion.div>
     </div>
   );

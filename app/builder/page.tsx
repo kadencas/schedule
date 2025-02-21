@@ -1,23 +1,7 @@
 "use client";
 import React, { useState, useEffect, MouseEvent, useRef } from "react";
-
-// Create an array of hours (9 AM -> 10 PM) with both numeric and display labels.
-const hours = Array.from({ length: 14 }, (_, i) => {
-  const numeric = i + 9; // 9..22
-  const hour12 = numeric % 12 === 0 ? 12 : numeric % 12;
-  const period = numeric >= 12 ? "PM" : "AM";
-  return { numeric, label: `${hour12} ${period}` };
-});
-
-const days = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+import PopupEditor from "../components/BuilderComponents/PopupEditor";
+import { hours, days, defaultSelectedDay } from "../../constants/constants";
 
 // Helper: get most recent Monday
 function getMostRecentMonday(date: Date): Date {
@@ -27,49 +11,6 @@ function getMostRecentMonday(date: Date): Date {
   monday.setDate(date.getDate() - diff);
   return monday;
 }
-
-interface ShiftSegment {
-  startTime: string;   // ISO string
-  endTime: string;     // ISO string
-  segmentType: string; // e.g. "Work", "Lunch", etc.
-  location?: string;
-}
-
-interface ShiftData {
-  startTime: string; // ISO
-  endTime: string;   // ISO
-  segments: ShiftSegment[];
-}
-
-interface EmployeeData {
-  id: string;
-  name: string;
-  shifts: ShiftData[];
-}
-
-/** 
- * A "DraftShift" (or segment) is used in the popup form 
- * for creating or editing segments.
- */
-interface DraftShift {
-  isEditing: boolean;     // are we editing an existing segment?
-  isSegment: boolean;     // (always true in this scenario)
-  employeeIndex: number;
-  shiftIndex: number;
-  segmentIndex: number | null; // which segment are we editing? null = new
-  dayIndex: number;       
-  startHour: number;
-  endHour: number;
-  title: string;         
-  location?: string;
-}
-
-// figure out default selected day
-const defaultSelectedDay = (() => {
-  const today = new Date();
-  const dayNum = today.getDay(); // 0=Sun..6=Sat
-  return dayNum === 0 ? "Sunday" : days[dayNum - 1];
-})();
 
 const ScheduleTable = () => {
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
@@ -372,12 +313,12 @@ const ScheduleTable = () => {
     console.log("buildNewShift => dayIdx:", dayIdx, "startHr:", startHr, "endHr:", endHr);
     const draftDate = new Date(mondayDate);
     draftDate.setDate(mondayDate.getDate() + dayIdx);
-  
+
     const sDate = new Date(draftDate);
     sDate.setHours(startHr, 0, 0, 0);
     const eDate = new Date(draftDate);
     eDate.setHours(endHr, 0, 0, 0);
-  
+
     const shift: ShiftData = {
       startTime: sDate.toISOString(),
       endTime: eDate.toISOString(),
@@ -570,13 +511,13 @@ const ScheduleTable = () => {
    */
   function getDeskCellContent(desk: string, hour: number) {
     const employeeNames = new Set<string>();
-  
+
     scheduleData.forEach((emp) => {
       emp.shifts.forEach((shift) => {
         const sStart = new Date(shift.startTime);
         const sEnd = new Date(shift.endTime);
         if (sStart.toDateString() !== selectedDate.toDateString()) return;
-  
+
         if (hour >= sStart.getHours() && hour < sEnd.getHours()) {
           shift.segments.forEach((seg) => {
             const segStart = new Date(seg.startTime).getHours();
@@ -590,14 +531,14 @@ const ScheduleTable = () => {
         }
       });
     });
-  
+
     if (employeeNames.size === 0) return null;
-  
+
     let colorClass = "bg-blue-200 text-blue-800";
     if (desk === "Desk 1") colorClass = "bg-red-200 text-red-800";
     if (desk === "Desk 2") colorClass = "bg-yellow-200 text-yellow-800";
     if (desk === "Desk 3") colorClass = "bg-green-200 text-green-800";
-  
+
     return (
       <div className={`${colorClass} rounded w-full h-full flex flex-col items-center justify-center text-xs p-1`}>
         {[...employeeNames].map((emp, idx) => (
@@ -606,24 +547,24 @@ const ScheduleTable = () => {
       </div>
     );
   }
-  
+
   const handleSaveAll = async () => {
     // Build the payload to send
     const payload = {
       companyId: "123", // replace with your actual company id
       schedule: scheduleData,
     };
-  
+
     // Print the payload to the console for debugging
     console.log("handleSaveAll => Payload being sent:", payload);
-  
+
     try {
       const response = await fetch("/api/updateshifts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Server responded with ${response.statusText}`);
       }
@@ -654,11 +595,10 @@ const ScheduleTable = () => {
                 console.log("Selected day changed to:", day);
                 setSelectedDay(day);
               }}
-              className={`px-4 py-2 rounded-t-md font-semibold text-sm transition-colors duration-200 ${
-                selectedDay === day
-                  ? "bg-blue-600 text-white border-b-4 border-blue-800"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={`px-4 py-2 rounded-t-md font-semibold text-sm transition-colors duration-200 ${selectedDay === day
+                ? "bg-blue-600 text-white border-b-4 border-blue-800"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
             >
               {day} {formatted}
             </button>
@@ -741,7 +681,7 @@ const ScheduleTable = () => {
                   return (
                     <td
                       key={hour}
-                      className="border border-gray-300 px-1 py-1 relative h-12 cursor-pointer"
+                      className="border border-gray-300 px-1 py-1 relative h-12 cursor-pointer no-select"
                       onMouseDown={(e) => handleMouseDown(e, empIdx, hour)}
                       onMouseEnter={(e) => handleMouseEnter(e, empIdx, hour)}
                       onMouseUp={(e) => {
@@ -794,62 +734,13 @@ const ScheduleTable = () => {
         </button>
       </div>
 
-      {/* POPUP FORM for segments */}
       {showShiftForm && draftShift && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded shadow-md w-[300px]">
-            <h3 className="text-lg font-bold mb-2">
-              {draftShift.isEditing ? "Edit Segment" : "New Segment"}
-            </h3>
-
-            <div className="mb-2">
-              <label className="block text-sm font-semibold">Segment Type:</label>
-              <input
-                type="text"
-                className="border rounded w-full p-1"
-                value={draftShift.title}
-                onChange={(e) => handleDraftChange("title", e.target.value)}
-              />
-            </div>
-            <div className="mb-2">
-              <label className="block text-sm font-semibold">Location:</label>
-              <input
-                type="text"
-                className="border rounded w-full p-1"
-                placeholder="(optional)"
-                value={draftShift.location}
-                onChange={(e) => handleDraftChange("location", e.target.value)}
-              />
-            </div>
-
-            <div className="mb-2 text-sm text-gray-600">
-              <div>
-                <strong>Day:</strong> {days[draftShift.dayIndex]}
-              </div>
-              <div>
-                <strong>Start Hour:</strong> {draftShift.startHour}:00
-              </div>
-              <div>
-                <strong>End Hour:</strong> {draftShift.endHour}:00
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 mt-4">
-              <button
-                onClick={handleCancelShiftForm}
-                className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveShiftForm}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
+        <PopupEditor
+          draftShift={draftShift}
+          onCancel={handleCancelShiftForm}
+          onSave={handleSaveShiftForm}
+          onChange={handleDraftChange}
+        />
       )}
     </div>
   );

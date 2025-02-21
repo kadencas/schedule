@@ -144,8 +144,23 @@ const WeeklyView: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
 
-  const today = new Date();
-  const mondayDate = getMostRecentMonday(today);
+  // Instead of computing mondayDate only once, store the current week's Monday in state.
+  const [currentMonday, setCurrentMonday] = useState<Date>(
+    getMostRecentMonday(new Date())
+  );
+
+  // Handlers to change weeks.
+  const handlePreviousWeek = () => {
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(newMonday.getDate() - 7);
+    setCurrentMonday(newMonday);
+  };
+
+  const handleNextWeek = () => {
+    const newMonday = new Date(currentMonday);
+    newMonday.setDate(newMonday.getDate() + 7);
+    setCurrentMonday(newMonday);
+  };
 
   useEffect(() => {
     const fetchShifts = async () => {
@@ -168,10 +183,10 @@ const WeeklyView: React.FC = () => {
     fetchShifts();
   }, []);
 
-  // Build the week days with corresponding dates
+  // Build the week days with corresponding dates using currentMonday.
   const weekDays = days.map((day, index) => {
-    const date = new Date(mondayDate);
-    date.setDate(mondayDate.getDate() + index);
+    const date = new Date(currentMonday);
+    date.setDate(currentMonday.getDate() + index);
     return { day, date };
   });
 
@@ -198,14 +213,29 @@ const WeeklyView: React.FC = () => {
 
   return (
     <div className="p-6 bg-white shadow-md rounded-lg overflow-auto">
-      <h2 className="text-2xl font-semibold text-center mb-4">
-        Week of{" "}
-        {mondayDate.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </h2>
+      {/* Week Navigation */}
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={handlePreviousWeek}
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Previous Week
+        </button>
+        <h2 className="text-2xl font-semibold">
+          Week of{" "}
+          {currentMonday.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </h2>
+        <button
+          onClick={handleNextWeek}
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Next Week
+        </button>
+      </div>
 
       {/* Filter Section */}
       <div className="flex flex-col sm:flex-row items-center justify-center mb-6 gap-4">
