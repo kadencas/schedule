@@ -1,0 +1,32 @@
+/* Timeline.module.css */
+.timelineContainer {
+    position: relative;
+    flex: 1;
+    margin: 20px 20px 0;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+  }
+  
+  .gridLineMajor {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+  
+  .gridLineMinor {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .hourLabel {
+    position: absolute;
+    top: 100%;
+    transform: translateX(-50%);
+    font-size: 16px;
+  }
+  
