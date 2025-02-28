@@ -26,7 +26,7 @@ export default function Timeline({
 }: TimelineProps) {
   const { containerRef, width: containerWidth } = useContainerWidth();
   const numTicks = Math.floor(containerWidth / 25) + 1;
-
+  console.log("timeline", matchingShift, initialX);
   return (
     <div
       ref={containerRef}
@@ -63,6 +63,7 @@ export default function Timeline({
       })}
       {matchingShift && (
         <ShiftBox
+          key={matchingShift.id}
           snapToGrid={snapToGrid}
           segments={shiftSegments}
           initialX={initialX}

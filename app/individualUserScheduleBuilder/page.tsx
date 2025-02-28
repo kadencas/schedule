@@ -17,6 +17,7 @@ import {
 
 export default function Page() {
 
+
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [currentMonday, setCurrentMonday] = useState<Date>(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState<string>(defaultSelectedDay);
