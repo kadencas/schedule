@@ -26,7 +26,7 @@ export default function Timeline({
 }: TimelineProps) {
   const { containerRef, width: containerWidth } = useContainerWidth();
   const numTicks = Math.floor(containerWidth / 25) + 1;
-  console.log("timeline", matchingShift, initialX);
+
   return (
     <div
       ref={containerRef}
@@ -39,7 +39,11 @@ export default function Timeline({
         if (i % 4 === 0) {
           const computedHour = 9 + i / 4;
           if (computedHour <= 22) {
-            hourLabel = computedHour > 12 ? computedHour - 12 : computedHour;
+            // Compute 12-hour format hour
+            const displayHour = computedHour > 12 ? computedHour - 12 : computedHour;
+            // Determine AM/PM period
+            const period = computedHour < 12 ? "am" : "pm";
+            hourLabel = `${displayHour} ${period}`;
           }
         }
         return (
@@ -64,6 +68,7 @@ export default function Timeline({
       {matchingShift && (
         <ShiftBox
           key={matchingShift.id}
+          shiftId={matchingShift.id}
           snapToGrid={snapToGrid}
           segments={shiftSegments}
           initialX={initialX}

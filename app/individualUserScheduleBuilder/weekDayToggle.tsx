@@ -1,79 +1,74 @@
 // WeekDayToggle.tsx
 import React from "react";
 import { days, getDayDateLabel } from "./helper/helper";
+import { motion } from "framer-motion";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 interface WeekDayToggleProps {
-    currentMonday: Date;
-    formattedMondayDate: string;
-    handlePreviousWeek: () => void;
-    handleNextWeek: () => void;
-    selectedDay: string;
-    setSelectedDay: (day: string) => void;
+  currentMonday: Date;
+  formattedMondayDate: string;
+  handlePreviousWeek: () => void;
+  handleNextWeek: () => void;
+  selectedDay: string;
+  setSelectedDay: (day: string) => void;
 }
 
-
 export default function WeekDayToggle({
-    currentMonday,
-    formattedMondayDate,
-    handlePreviousWeek,
-    handleNextWeek,
-    selectedDay,
-    setSelectedDay,
+  currentMonday,
+  formattedMondayDate,
+  handlePreviousWeek,
+  handleNextWeek,
+  selectedDay,
+  setSelectedDay,
 }: WeekDayToggleProps) {
-    return (
-        <div>
-            {/* Header Section */}
-            <header
-                style={{
-                    width: "100%",
-                    height: 60,
-                    position: "relative",
-                    backgroundColor: "#fff",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "0 20px",
-                }}
-            >
-                <button onClick={handlePreviousWeek}>Previous Week</button>
-                <span style={{ fontWeight: "bold" }}>Week of: {formattedMondayDate}</span>
-                <button onClick={handleNextWeek}>Next Week</button>
-            </header>
+  return (
+    <div className="w-full">
+      {/* Header Section */}
+      <header className="w-full h-16 bg-white shadow flex items-center justify-between px-5">
+        <motion.button
+          onClick={handlePreviousWeek}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center text-blue-500 focus:outline-none"
+        >
+          <FiChevronLeft size={24} />
+          <span className="ml-1 font-medium">Previous Week</span>
+        </motion.button>
 
-            {/* Day Tabs Section */}
-            <div
-                style={{
-                    backgroundColor: "#f1f1f1",
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "8px",
-                    padding: "10px 0",
-                }}
+        <span className="font-bold text-gray-800">
+          Week of: {formattedMondayDate}
+        </span>
+
+        <motion.button
+          onClick={handleNextWeek}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center text-blue-500 focus:outline-none"
+        >
+          <span className="mr-1 font-medium">Next Week</span>
+          <FiChevronRight size={24} />
+        </motion.button>
+      </header>
+
+      {/* Day Tabs Section */}
+      <div className="bg-gray-100 flex justify-center gap-2 py-3">
+        {days.map((day, index) => {
+          const dateLabel = getDayDateLabel(currentMonday, index);
+          const isSelected = selectedDay === day;
+          return (
+            <motion.button
+              key={day}
+              onClick={() => setSelectedDay(day)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`px-4 py-2 min-w-[90px] rounded-md font-bold transition-all duration-200 
+                ${isSelected ? "bg-blue-500 text-white border-2 border-blue-500" : "bg-white text-gray-800 border border-gray-300"}`}
             >
-                {days.map((day, index) => {
-                    const dateLabel = getDayDateLabel(currentMonday, index);
-                    const isSelected = selectedDay === day;
-                    return (
-                        <button
-                            key={day}
-                            onClick={() => setSelectedDay(day)}
-                            style={{
-                                padding: "8px 16px",
-                                borderRadius: "4px",
-                                border: isSelected ? "2px solid #007bff" : "1px solid #ccc",
-                                backgroundColor: isSelected ? "#007bff" : "#fff",
-                                color: isSelected ? "#fff" : "#000",
-                                cursor: "pointer",
-                                minWidth: 90,
-                                fontWeight: "bold",
-                            }}
-                        >
-                            {day} ({dateLabel})
-                        </button>
-                    );
-                })}
-            </div>
-        </div>
-    );
+              {day} <span className="text-sm">({dateLabel})</span>
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }

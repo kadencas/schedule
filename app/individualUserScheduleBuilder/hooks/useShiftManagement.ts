@@ -11,7 +11,7 @@ export interface Segment {
 }
 
 interface ShiftTimesState {
-  matchingShift: any;           // or a more specific type if you have one
+  matchingShift: any;           
   shiftStartTime: Date | null;
   shiftEndTime: Date | null;
   initialX: number;

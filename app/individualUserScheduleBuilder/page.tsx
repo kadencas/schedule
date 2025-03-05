@@ -89,13 +89,9 @@ export default function Page() {
         />
 
         <div className={styles.rightPanel}>
-          <button
-            onClick={() => setSnapToGrid(!snapToGrid)}
-            className={styles.toggleButton}
-          >
-            {snapToGrid ? "Disable Snap (15 mins)" : "Enable Snap (15 mins)"}
-          </button>
-          <ShiftMenu />
+          <ShiftMenu 
+          snapToGrid={snapToGrid}
+          setSnapToGrid={setSnapToGrid}/>
         </div>
       </div>
     </div>
