@@ -48,11 +48,24 @@ export function useShiftManagement(
     selectedDate.setDate(currentMonday.getDate() + dayIndex);
     const selectedDateString = selectedDate.toISOString().split("T")[0];
 
-    // 2) Find the matching shift
     const matchingShift = userShifts.find((shift: any) => {
-      const shiftDateString = new Date(shift.shiftDate)
-        .toISOString()
-        .split("T")[0];
+      console.log("shift.shiftDate:", shift.shiftDate); // Log the raw shiftDate value
+    
+      if (!shift.shiftDate) {
+        console.warn("shift.shiftDate is missing for shift:", shift);
+        return false;
+      }
+    
+      const date = new Date(shift.shiftDate);
+      console.log("Parsed date:", date); // Log the Date object
+    
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date for shift:", shift);
+        return false;
+      }
+    
+      const shiftDateString = date.toISOString().split("T")[0];
+      console.log("shiftDateString:", shiftDateString, "selectedDateString:", selectedDateString);
       return shiftDateString === selectedDateString;
     });
 

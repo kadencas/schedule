@@ -194,7 +194,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
                   className="absolute top-1 right-1 bg-transparent border-0 rounded-full w-4 h-4 cursor-pointer p-0 flex items-center justify-center"
                 >
                   <FaPencilAlt size={14} className="text-white-500" />
-                </button>
+                </button> 
                 <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
                   <MdDragHandle size={15} />
                 </div>

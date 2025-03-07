@@ -211,9 +211,12 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                     minute: "2-digit",
                   })}
                 </span>
+                
+                {!readOnly && (
                 <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
                   <MdDragHandle size={15} />
                 </div>
+                  )}
               </div>
               <div className="relative h-[70px]">
                 {localSegments.map((seg) => (
