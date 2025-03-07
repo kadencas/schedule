@@ -23,16 +23,11 @@ export function useShiftManagement(
   currentMonday: Date,
   selectedDay: string
 ) {
-  // State for segments
   const [shiftSegments, setShiftSegments] = useState<Segment[]>([]);
-
-  // State for new segment fields
   const [newSegmentLabel, setNewSegmentLabel] = useState("");
   const [newSegmentStart, setNewSegmentStart] = useState(30);
   const [newSegmentEnd, setNewSegmentEnd] = useState(60);
   const [newSegmentColor, setNewSegmentColor] = useState("#ffc4d6");
-
-  // State for computed time/position
   const [shiftTimes, setShiftTimes] = useState<ShiftTimesState>({
     matchingShift: null,
     shiftStartTime: null,
@@ -40,6 +35,8 @@ export function useShiftManagement(
     initialX: 0,
     initialWidth: 100,
   });
+
+  console.log(userShifts);
 
   // Update shiftSegments AND compute time/position in one effect
   useEffect(() => {
@@ -62,6 +59,9 @@ export function useShiftManagement(
     // 3) Build the segments array for this matching shift (or empty if none)
     if (matchingShift) {
       const shiftStart = new Date(matchingShift.startTime);
+      console.log(matchingShift.startTime); //raw time
+      console.log(shiftStart); // javaScript's data object auto converts to EST
+
 
       // Map the segments from the matching shift
       const mappedSegments = matchingShift.segments.map((seg: any) => {
@@ -78,7 +78,7 @@ export function useShiftManagement(
           label: seg.segmentType,
           start: startMinutes,
           end: endMinutes,
-          color: seg.location,
+          color: seg.color,
         };
       });
 
@@ -167,6 +167,8 @@ export function useShiftManagement(
     setNewSegmentEnd(60);
     setNewSegmentColor("#ffc4d6");
   };
+
+  console.log(shiftTimes);
 
   // Now return everything we need, including times from shiftTimes state
   return {

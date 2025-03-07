@@ -23,6 +23,7 @@ export default function Page() {
   const [selectedDay, setSelectedDay] = useState<string>(defaultSelectedDay);
   const grid_height = 100;
   const { userShifts } = useUserShifts();
+  const readOnly = false;
 
  /**
   * Handles user clicking previous week button
@@ -86,6 +87,7 @@ export default function Page() {
           shiftStartTime={shiftStartTime}
           shiftEndTime={shiftEndTime}
           gridHeight={grid_height}
+          readOnly={readOnly}
         />
 
         <div className={styles.rightPanel}>

@@ -99,6 +99,7 @@ model segments {
   startTime   DateTime   // When the segment starts
   endTime     DateTime   // When the segment ends
   notes       String?
+  color       String     @default("#FFFFFF")
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now()) @updatedAt
   

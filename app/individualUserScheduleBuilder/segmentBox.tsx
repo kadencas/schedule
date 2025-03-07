@@ -18,6 +18,7 @@ interface SegmentData {
 interface SegmentBoxProps {
   segment: SegmentData;
   snapToGrid: boolean;
+  readOnly: boolean;
   onUpdate: (id: string, newStart: number, newEnd: number) => void;
   onLabelUpdate?: (id: string, newLabel: string) => void;
   onColorUpdate?: (id: string, newColor: string) => void;
@@ -39,6 +40,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   className = "",
   shiftStartTime,
   minutesPerPixel,
+  readOnly,
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null!);
   const editButtonRef = useRef<HTMLButtonElement>(null);
@@ -51,18 +53,17 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
 
   // Preset color options (6 distinct choices)
   const colorOptions = [
-    "#6BA0E5", // Brighter Blue
-    "#7ACF8F", // Brighter Green
-    "#FFA1A1", // Brighter Coral
-    "#FFD27F", // Brighter Yellow
-    "#BAA1E0", // Brighter Purple
-    "#77D3D3"  // Brighter Teal
+    "#6BA0E5",
+    "#7ACF8F",
+    "#FFA1A1",
+    "#FFD27F",
+    "#BAA1E0",
+    "#77D3D3",
   ];
 
-  // Sync with props
   useEffect(() => {
-    setLeftPx(segment.start);
-    setWidthPx(segment.end - segment.start);
+    setLeftPx(segment.start / 0.6);
+    setWidthPx((segment.end - segment.start) / 0.6);
     setLocalLabel(segment.label);
   }, [segment.start, segment.end, segment.label]);
 
@@ -70,35 +71,35 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
     setLocalColor(segment.color);
   }, [segment.color]);
 
-  // DRAG: update position state and notify parent
+  // DRAG: update position state and notify parent in minutes
   const handleDrag = (_: DraggableEvent, data: DraggableData) => {
     let newX = data.x;
     if (snapToGrid) {
       newX = Math.round(newX / SNAP_PX) * SNAP_PX;
     }
     setLeftPx(newX);
-    onUpdate(segment.id, newX, newX + widthPx);
+    onUpdate(segment.id, newX * 0.6, (newX + widthPx) * 0.6);
   };
 
-  // RESIZE: update width during drag
+  // RESIZE: update width during drag (and convert when notifying parent)
   const handleResize = (_: React.SyntheticEvent, data: { size: { width: number } }) => {
     setWidthPx(data.size.width);
-    onUpdate(segment.id, leftPx, leftPx + data.size.width);
+    onUpdate(segment.id, leftPx * 0.6, (leftPx + data.size.width) * 0.6);
   };
 
-  // RESIZE STOP: snap width and update parent state
+  // RESIZE STOP: snap width and update parent state in minutes
   const handleResizeStop = (_: React.SyntheticEvent, data: { size: { width: number } }) => {
     let newWidth = data.size.width;
     if (snapToGrid) {
       newWidth = Math.round(newWidth / SNAP_PX) * SNAP_PX;
     }
     setWidthPx(newWidth);
-    onUpdate(segment.id, leftPx, leftPx + newWidth);
+    onUpdate(segment.id, leftPx * 0.6, (leftPx + newWidth) * 0.6);
   };
 
   // Toggle the editor for the segment name and color.
   const toggleEditor = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent dragging when clicking the edit button
+    e.stopPropagation();
     setShowEditor((prev) => !prev);
   };
 
@@ -125,19 +126,29 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   };
 
   const rect = editButtonRef.current?.getBoundingClientRect();
-const popupStyle = {
-  top: rect ? rect.bottom + window.scrollY : 0,
-  left: rect ? rect.left + window.scrollX : 0,
-};
+  const popupStyle = {
+    top: rect ? rect.bottom + window.scrollY : 0,
+    left: rect ? rect.left + window.scrollX : 0,
+  };
 
-  // Calculate the segment's start and end times based on left position and width.
+  // Calculate segment's start and end times
   let segmentStartTimeStr: string | undefined;
   let segmentEndTimeStr: string | undefined;
   if (shiftStartTime && minutesPerPixel) {
-    const segStart = new Date(shiftStartTime.getTime() + leftPx * minutesPerPixel * 60000);
-    segmentStartTimeStr = segStart.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const segEnd = new Date(shiftStartTime.getTime() + (leftPx + widthPx) * minutesPerPixel * 60000);
-    segmentEndTimeStr = segEnd.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const segStart = new Date(
+      shiftStartTime.getTime() + leftPx * minutesPerPixel * 60000
+    );
+    segmentStartTimeStr = segStart.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const segEnd = new Date(
+      shiftStartTime.getTime() + (leftPx + widthPx) * minutesPerPixel * 60000
+    );
+    segmentEndTimeStr = segEnd.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   return (
@@ -146,18 +157,19 @@ const popupStyle = {
       axis="x"
       position={{ x: leftPx, y: 3 }}
       bounds="parent"
-      onDrag={handleDrag}
+      onDrag={!readOnly ? handleDrag : undefined}
       cancel=".react-resizable-handle"
+      disabled={readOnly}
     >
       <div ref={nodeRef} className={`${className} absolute top-0 h-10`}>
         <ResizableBox
           width={widthPx}
           height={64}
           axis="x"
-          resizeHandles={["e"]}
+          resizeHandles={readOnly ? [] : ["e"]}
           minConstraints={[30, 40]}
-          onResize={handleResize}
-          onResizeStop={handleResizeStop}
+          onResize={!readOnly ? handleResize : undefined}
+          onResizeStop={!readOnly ? handleResizeStop : undefined}
           handleSize={[8, 8]}
         >
           <div
@@ -165,34 +177,36 @@ const popupStyle = {
             style={{ backgroundColor: localColor }}
           >
             <span>{localLabel}</span>
-            {/* Delete button in top left */}
-            <button
-              onClick={handleDelete}
-              className="absolute top-1 left-1 bg-transparent border-0 rounded-full cursor-pointer p-0 flex items-center justify-center"
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              <MdDelete size={17} />
-            </button>
-            {/* Edit button in top right to open label/color editor */}
-            <button
-              ref={editButtonRef}
-              onClick={toggleEditor}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="absolute top-1 right-1 bg-transparent border-0 rounded-full w-4 h-4 cursor-pointer p-0 flex items-center justify-center"
-            >
-              <FaPencilAlt size={14} className="text-white-500" />
-            </button>
-            <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
-              <MdDragHandle size={15} />
-            </div>
-            {showEditor &&
+            {/* Render these icons only if readOnly is false */}
+            {!readOnly && (
+              <>
+                <button
+                  onClick={handleDelete}
+                  className="absolute top-1 left-1 bg-transparent border-0 rounded-full cursor-pointer p-0 flex items-center justify-center"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <MdDelete size={17} />
+                </button>
+                <button
+                  ref={editButtonRef}
+                  onClick={toggleEditor}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="absolute top-1 right-1 bg-transparent border-0 rounded-full w-4 h-4 cursor-pointer p-0 flex items-center justify-center"
+                >
+                  <FaPencilAlt size={14} className="text-white-500" />
+                </button>
+                <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
+                  <MdDragHandle size={15} />
+                </div>
+              </>
+            )}
+            {showEditor && !readOnly &&
               ReactDOM.createPortal(
                 <div
                   onMouseDown={(e) => e.stopPropagation()}
                   style={popupStyle}
                   className="fixed bg-white border border-gray-300 rounded p-2 z-[1000]"
                 >
-                  {/* Input to update the label */}
                   <input
                     type="text"
                     value={localLabel}
@@ -200,7 +214,6 @@ const popupStyle = {
                     className="mb-2 block border border-gray-300 rounded px-1 py-0.5 w-full"
                     placeholder="Segment name"
                   />
-                  {/* Preset color options */}
                   <div className="flex space-x-2 mb-2">
                     {colorOptions.map((color) => (
                       <button
@@ -228,7 +241,6 @@ const popupStyle = {
                 </div>,
                 document.body
               )}
-            {/* Display segment's time range */}
             {segmentStartTimeStr && segmentEndTimeStr && (
               <div className="absolute bottom-1 text-[10px] text-gray-600">
                 {`${segmentStartTimeStr} - ${segmentEndTimeStr}`}

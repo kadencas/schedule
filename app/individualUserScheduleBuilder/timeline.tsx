@@ -12,6 +12,7 @@ interface TimelineProps {
   shiftStartTime: Date | null;
   shiftEndTime: Date | null;
   gridHeight: number;
+  readOnly: boolean;
 }
 
 export default function Timeline({
@@ -23,6 +24,7 @@ export default function Timeline({
   shiftStartTime,
   shiftEndTime,
   gridHeight,
+  readOnly = false,
 }: TimelineProps) {
   const { containerRef, width: containerWidth } = useContainerWidth();
   const numTicks = Math.floor(containerWidth / 25) + 1;
@@ -75,6 +77,7 @@ export default function Timeline({
           initialWidth={initialWidth}
           startTime={shiftStartTime!}
           endTime={shiftEndTime!}
+          readOnly={readOnly}
         />
       )}
     </div>
