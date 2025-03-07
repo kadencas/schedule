@@ -56,3 +56,54 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    // Get session info and validate authorization
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user || !session.user.companyId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const companyId = String(session.user.companyId);
+
+    // Parse the request body for shift details
+    const body = await request.json();
+    const {
+      userId,       // ID of the user for whom the shift is being added
+      shiftDate,    // Date for the first occurrence of the shift
+      startTime,    // Shift start time
+      endTime,      // Shift end time
+      isRecurring,  // Optional: whether the shift recurs
+      recurrenceRule,    // Optional: recurrence rule, e.g. "FREQ=WEEKLY;BYDAY=MO,WE,FR"
+      recurrenceEndDate, // Optional: when the recurrence ends
+      notes,        // Optional: any additional notes for the shift
+    } = body;
+
+    // Validate required fields
+    if (!userId || !shiftDate || !startTime || !endTime) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Create the new shift in the database (without segments)
+    const newShift = await prisma.work_shifts.create({
+      data: {
+        userId,
+        companyId,
+        shiftDate: new Date(shiftDate),
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        isRecurring: isRecurring || false,
+        recurrenceRule: recurrenceRule || null,
+        recurrenceEndDate: recurrenceEndDate ? new Date(recurrenceEndDate) : null,
+        notes: notes || null,
+      },
+    });
+
+    return NextResponse.json({ shift: newShift }, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating shift", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
