@@ -2,14 +2,14 @@
 import React, { useState } from "react";
 import { useAllEmployeesShifts } from "./useAllEmployeeShifts";
 import EmployeeTimeline from "./EmployeeTimeline";
-import WeekDayToggle from "@/app/individualUserScheduleBuilder/weekDayToggle";
+import WeekDayToggle from "@/app/individual-schedule-builder/components/weekDayToggle";
 import {
   defaultSelectedDay,
   formatMondayDate,
   getMostRecentMonday,
   getNextWeekMonday,
   getPreviousWeekMonday,
-} from "@/app/individualUserScheduleBuilder/helper/helper";
+} from "@/app/individual-schedule-builder/helper/helper";
 
 export default function Page() {
   const { employees, loading, error } = useAllEmployeesShifts();

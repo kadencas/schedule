@@ -1,5 +1,5 @@
 import React from "react";
-import { days, getDayDateLabel } from "./helper/helper";
+import { days, getDayDateLabel } from "../helper/helper";
 import { motion } from "framer-motion";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 

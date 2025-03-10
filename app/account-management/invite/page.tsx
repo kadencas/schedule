@@ -17,7 +17,7 @@ export default function InviteTeamMember() {
   if (status === "loading") return <p>Loading...</p>;
   if (!session) return <p>You must be logged in to invite team members.</p>;
 
-  // Get companyId from the session. Make sure your session object includes this field.
+  // Get companyId from the session
   const companyId = session.user.companyId;
 
   const handleSubmit = async (e: React.FormEvent) => {

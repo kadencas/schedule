@@ -1,8 +1,21 @@
 import React, { useMemo } from "react";
-import Timeline from "@/app/individualUserScheduleBuilder/timeline";
-import { useShiftManagement } from "@/app/individualUserScheduleBuilder/hooks/useShiftManagement";
+import Timeline from "@/app/individual-schedule-builder/components/timeline";
+import { useShiftManagement } from "@/app/individual-schedule-builder/hooks/useShiftManagement";
+import { Employee } from "@/types/types";
 
-export default function EmployeeTimeline({ employee, currentMonday, selectedDay }) {
+interface EmployeeTimelineProps {
+  employee: Employee;
+  currentMonday: Date;
+  selectedDay: string;
+}
+
+export default function EmployeeTimeline({
+  employee,
+  currentMonday,
+  selectedDay,
+}: EmployeeTimelineProps) {
+
+
   const snapToGrid = true;
   const grid_height = 100;
   const readOnly = true;
@@ -28,7 +41,6 @@ export default function EmployeeTimeline({ employee, currentMonday, selectedDay 
     shiftEndTime,
     initialX,
     initialWidth,
-    // other returned values if needed
   } = useShiftManagement(employeeShifts, currentMonday, selectedDay);
 
   return (

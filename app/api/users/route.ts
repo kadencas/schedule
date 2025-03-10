@@ -10,7 +10,6 @@ export async function GET(request: Request) {
   try {
     // Retrieve the session
     const session = await getServerSession(authOptions);
-    console.log("Session data:", session);
 
     // Ensure the user is authenticated
     if (!session || !session.user || !session.user.companyId) {

@@ -4,19 +4,12 @@ import ReactDOM from "react-dom";
 import Draggable, { DraggableEvent, DraggableData } from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
-import { FaCheck, FaPencilAlt, FaTimes } from "react-icons/fa";
+import { FaCheck, FaPencilAlt, FaTimes, FaMapMarkerAlt } from "react-icons/fa";
 import { MdDelete, MdDragHandle } from "react-icons/md";
-
-interface SegmentData {
-  id: string;
-  label: string;
-  start: number;
-  end: number;
-  color: string;
-}
+import { Segment } from "@/types/types";
 
 interface SegmentBoxProps {
-  segment: SegmentData;
+  segment: Segment;
   snapToGrid: boolean;
   readOnly: boolean;
   onUpdate: (id: string, newStart: number, newEnd: number) => void;
@@ -121,7 +114,6 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
     if (onDelete) {
       onDelete(segment.id);
     } else {
-      console.log(`Delete segment ${segment.id}`);
     }
   };
 
@@ -242,10 +234,14 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
                 document.body
               )}
             {segmentStartTimeStr && segmentEndTimeStr && (
-              <div className="absolute bottom-1 text-[10px] text-gray-600">
+              <div className="absolute bottom-1 left-1 text-[10px] text-gray-600">
                 {`${segmentStartTimeStr} - ${segmentEndTimeStr}`}
               </div>
             )}
+            <div className="absolute bottom-1 right-1 text-[10px] text-gray-600 flex items-center">
+              <FaMapMarkerAlt className="mr-1" size={10} />
+              {segment.location}
+            </div>
           </div>
         </ResizableBox>
       </div>

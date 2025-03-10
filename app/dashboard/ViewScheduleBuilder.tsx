@@ -4,9 +4,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 
-
-const ScheduleBuilderComponent = dynamic(() => import("../../individualUserScheduleBuilder/page"), { ssr: false });
-
+const ScheduleBuilderComponent = dynamic(() => import("../individual-schedule-builder/page"), { ssr: false });
 
 export default function ScheduleEditorTab() {
   return (

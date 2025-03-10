@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { randomBytes } from "crypto";
-import { prisma } from "@/lib/prisma"; // adjust path as necessary
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {

@@ -6,7 +6,7 @@ import { PT_Serif } from 'next/font/google';
 
 const ptSerif = PT_Serif({
   subsets: ['latin'],
-  weight: '700', // adjust if you need a different weight
+  weight: '700',
 });
 
 export default function Home() {
@@ -74,7 +74,7 @@ export default function Home() {
         >
           Book a Demo
         </motion.button>
-        <Link href="/signin">
+        <Link href="/account-management/signin">
           <motion.button
             className="px-4 py-2 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 transition"
             whileHover={{ scale: 1.1 }}

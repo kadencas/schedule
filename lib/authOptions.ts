@@ -17,10 +17,8 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log(">>> [authorize] credentials:", credentials);
 
         if (!credentials?.email || !credentials.password) {
-          console.log(">>> [authorize] Missing email or password");
           return null;
         }
 
@@ -30,21 +28,15 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user || !user.passwordHash) {
-            console.log(">>> [authorize] User not found or no passwordHash");
             return null;
           }
 
           const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
           if (!isValid) {
-            console.log(">>> [authorize] Invalid password");
             return null;
           }
 
-          console.log(">>> [authorize] User authorized:", {
-            id: user.id,
-            email: user.email,
-            companyId: user.companyId,
-          });
+
 
           // Return the shape NextAuth expects
           return {
@@ -66,27 +58,22 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      console.log(">>> [jwt] incoming token:", token);
-      console.log(">>> [jwt] incoming user:", user);
 
       if (user) {
         token.id = user.id;
         token.companyId = user.companyId; // <-- keep this a string
       }
 
-      console.log(">>> [jwt] outgoing token:", token);
+
       return token;
     },
     async session({ session, token }) {
-      console.log(">>> [session] incoming token:", token);
-      console.log(">>> [session] incoming session:", session);
+
 
       if (token) {
         session.user.id = token.id as string;
         session.user.companyId = token.companyId as string; 
       }
-
-      console.log(">>> [session] outgoing session:", session);
       return session;
     },
   },

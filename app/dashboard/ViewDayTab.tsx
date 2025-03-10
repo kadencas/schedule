@@ -3,7 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
-const TeamComponent = dynamic(() => import("../ScheduleViews/viewDay/page"), { ssr: false });
+const TeamComponent = dynamic(() => import("../all-schedule-view-day/page"), { ssr: false });
 
 export default function ViewDayTab() {
   return (

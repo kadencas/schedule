@@ -1,7 +1,7 @@
 import React from "react";
 import ShiftBox from "./shiftBox";
-import { useContainerWidth } from "./hooks/useContainerWidth";
-import styles from "./Timeline.module.css";
+import { useContainerWidth } from "../hooks/useContainerWidth";
+import styles from "../styles/Timeline.module.css";
 
 interface TimelineProps {
   snapToGrid: boolean;

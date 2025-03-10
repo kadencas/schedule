@@ -8,7 +8,6 @@ export async function POST(request: Request) {
   let payload;
   try {
     payload = await request.json();
-    console.log("Received payload:", payload);
   } catch (err) {
     console.error("Error parsing payload:", err);
     return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });

@@ -17,7 +17,6 @@ export const useUserShifts = () => {
         const data = await res.json();
         if (data.success) {
           setUserShifts(data.data);
-          console.log("User Shifts:", data.data);
         } else {
           console.error("Error fetching shifts:", data.error);
         }

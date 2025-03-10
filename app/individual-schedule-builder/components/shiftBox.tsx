@@ -7,14 +7,8 @@ import SegmentBox from "./segmentBox";
 import { FaCheck, FaPlus } from "react-icons/fa";
 import { MdDragHandle } from "react-icons/md";
 import { v4 as uuidv4 } from 'uuid';
+import { Segment } from "@/types/types";
 
-interface Segment {
-  id: string;
-  label: string;
-  start: number;
-  end: number;
-  color: string;
-}
 
 interface ShiftBoxProps {
   snapToGrid: boolean;
@@ -97,6 +91,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       start: newStart,
       end: newStart + 100,
       color: "#ffffff",
+      location: "",
     };
     setLocalSegments((prev) => [...prev, newSeg]);
     setHasChanges(true);
@@ -123,7 +118,6 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       const updated = prev.map((seg) =>
         seg.id === id ? { ...seg, color: newColor } : seg
       );
-      console.log("Updated segments!!!!!:", updated);
       return updated;
     });
     setHasChanges(true);
@@ -139,13 +133,11 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
         startTime: new Date(dynamicStartTime.getTime() + seg.start * 60000).toISOString(),
         endTime: new Date(dynamicStartTime.getTime() + seg.end * 60000).toISOString(),
         segmentType: seg.label || "default",
-        location: "",
+        location: seg.location,
         notes: "",
         color: seg.color,
       })),
     };
-
-    console.log("Payload", payload);
 
     try {
       const response = await fetch("/api/updateshiftwithsegments", {
@@ -154,7 +146,6 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
         body: JSON.stringify(payload),
       });
       const data = await response.json();
-      console.log("Shift saved:", data);
       // Reset the dirty flag after a successful save
       setHasChanges(false);
     } catch (error) {

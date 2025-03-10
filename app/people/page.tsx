@@ -65,7 +65,7 @@ export default function Team() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Your Organization</h1>
-        <Link href="/invite">
+        <Link href="/account-management/invite">
           <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
             Add Members
           </button>

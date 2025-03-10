@@ -5,9 +5,6 @@ import bcrypt from "bcrypt";
 
 export async function POST(request: Request) {
   try {
-    console.log('Request method:', request.method);
-    console.log('Request headers:', Object.fromEntries(request.headers));
-
     const contentType = request.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       console.error('Invalid Content-Type:', contentType);
@@ -27,8 +24,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    console.log('Parsed request body:', body);
 
     // Destructure the expected fields including the inviteToken
     const { email, name, password, inviteToken } = body;

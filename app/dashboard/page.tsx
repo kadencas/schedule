@@ -7,11 +7,11 @@ import { useSession, signOut } from "next-auth/react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
 // import tabs
-import MyScheduleTab from "../components/DashboardTabs/MyScheduleTab";
-import ViewDayTab from "../components/DashboardTabs/ViewDayTab";
-import ViewWeekTab from "../components/DashboardTabs/ViewWeekTab";
-import ViewPeopleTab from "../components/DashboardTabs/ViewPeopleTab"
-import ViewScheduleBuilder from "../components/DashboardTabs/ViewScheduleBuilder"
+import MyScheduleTab from "./MyScheduleTab";
+import ViewDayTab from "./ViewDayTab";
+import ViewWeekTab from "./ViewWeekTab";
+import ViewPeopleTab from "./ViewPeopleTab"
+import ViewScheduleBuilder from "./ViewScheduleBuilder"
 
 const locales = {
   "en-US": require("date-fns/locale/en-US"),

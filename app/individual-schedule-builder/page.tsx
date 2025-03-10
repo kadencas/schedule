@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import WeekDayToggle from "./weekDayToggle";
-import ShiftMenu from "./shiftMenu";
-import Timeline from "./timeline";
-import styles from "./Page.module.css";
+import WeekDayToggle from "./components/weekDayToggle";
+import ShiftMenu from "./components/shiftMenu";
+import Timeline from "./components/timeline";
+import styles from "./styles/Page.module.css"
 import { useShiftManagement } from "./hooks/useShiftManagement";
 import { useUserShifts } from "./hooks/useUserShift";
 import {
@@ -111,7 +111,6 @@ export default function Page() {
         throw new Error("Failed to create shift");
       }
       const data = await response.json();
-      console.log("New shift created:", data.shift);
       // Optionally: Refresh shifts or update local state as needed.
     } catch (error) {
       console.error("Error creating shift:", error);

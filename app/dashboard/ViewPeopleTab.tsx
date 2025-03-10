@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import React from "react";
 
-const WeekComponent = dynamic(() => import("../ScheduleViews/viewWeek/page"), { ssr: false });
+const PeopleComponent = dynamic(() => import("../people/page"), { ssr: false });
 
-  export default function ViewWeekTab() {
+export default function PeopleTab() {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -12,7 +12,7 @@ const WeekComponent = dynamic(() => import("../ScheduleViews/viewWeek/page"), { 
         transition={{ duration: 0.6 }}
         className="w-full max-w-10xl z-10 relative"
       >
-        <WeekComponent />
+        <PeopleComponent />
       </motion.div>
     );
   }

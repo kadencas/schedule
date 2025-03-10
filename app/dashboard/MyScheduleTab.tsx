@@ -3,19 +3,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Calendar } from "react-big-calendar";
 import { format } from "date-fns";
+import { Employee } from "@/types/types";
 
 interface Shift {
   startTime: string;
   endTime: string;
 }
 
-interface EmployeeData {
-  name: string;
-  shifts: Shift[];
-}
-
 interface MyScheduleTabProps {
-  employeeData: EmployeeData | null;
+  employeeData: Employee | null;
   userName: string;
   localizer: any;
 }

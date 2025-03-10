@@ -36,11 +36,8 @@ export function useShiftManagement(
     initialWidth: 100,
   });
 
-  console.log(userShifts);
-
   // Update shiftSegments AND compute time/position in one effect
   useEffect(() => {
-    console.log("selectedDay changed:", selectedDay);
 
     // 1) Figure out which date corresponds to the selectedDay
     const dayIndex = days.indexOf(selectedDay);
@@ -48,16 +45,13 @@ export function useShiftManagement(
     selectedDate.setDate(currentMonday.getDate() + dayIndex);
     const selectedDateString = selectedDate.toISOString().split("T")[0];
 
-    const matchingShift = userShifts.find((shift: any) => {
-      console.log("shift.shiftDate:", shift.shiftDate); // Log the raw shiftDate value
-    
+    const matchingShift = userShifts.find((shift: any) => {    
       if (!shift.shiftDate) {
         console.warn("shift.shiftDate is missing for shift:", shift);
         return false;
       }
     
       const date = new Date(shift.shiftDate);
-      console.log("Parsed date:", date); // Log the Date object
     
       if (isNaN(date.getTime())) {
         console.warn("Invalid date for shift:", shift);
@@ -65,16 +59,12 @@ export function useShiftManagement(
       }
     
       const shiftDateString = date.toISOString().split("T")[0];
-      console.log("shiftDateString:", shiftDateString, "selectedDateString:", selectedDateString);
       return shiftDateString === selectedDateString;
     });
 
     // 3) Build the segments array for this matching shift (or empty if none)
     if (matchingShift) {
       const shiftStart = new Date(matchingShift.startTime);
-      console.log(matchingShift.startTime); //raw time
-      console.log(shiftStart); // javaScript's data object auto converts to EST
-
 
       // Map the segments from the matching shift
       const mappedSegments = matchingShift.segments.map((seg: any) => {
@@ -92,6 +82,7 @@ export function useShiftManagement(
           start: startMinutes,
           end: endMinutes,
           color: seg.color,
+          location: seg.location,
         };
       });
 
@@ -180,8 +171,6 @@ export function useShiftManagement(
     setNewSegmentEnd(60);
     setNewSegmentColor("#ffc4d6");
   };
-
-  console.log(shiftTimes);
 
   // Now return everything we need, including times from shiftTimes state
   return {
