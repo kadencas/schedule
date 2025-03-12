@@ -5,11 +5,6 @@ import { Calendar } from "react-big-calendar";
 import { format } from "date-fns";
 import { Employee } from "@/types/types";
 
-interface Shift {
-  startTime: string;
-  endTime: string;
-}
-
 interface MyScheduleTabProps {
   employeeData: Employee | null;
   userName: string;

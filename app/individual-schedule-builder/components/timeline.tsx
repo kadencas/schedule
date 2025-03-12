@@ -2,6 +2,7 @@ import React from "react";
 import ShiftBox from "./shiftBox";
 import { useContainerWidth } from "../hooks/useContainerWidth";
 import styles from "../styles/Timeline.module.css";
+import { Shift } from "@/types/types";
 
 interface TimelineProps {
   snapToGrid: boolean;
@@ -13,6 +14,7 @@ interface TimelineProps {
   shiftEndTime: Date | null;
   gridHeight: number;
   readOnly: boolean;
+  onShiftSave: (shiftId: string, updatedData: Partial<Shift>) => void;
 }
 
 export default function Timeline({
@@ -25,6 +27,7 @@ export default function Timeline({
   shiftEndTime,
   gridHeight,
   readOnly = false,
+  onShiftSave,
 }: TimelineProps) {
   const { containerRef, width: containerWidth } = useContainerWidth();
   const numTicks = Math.floor(containerWidth / 25) + 1;
@@ -78,6 +81,7 @@ export default function Timeline({
           startTime={shiftStartTime!}
           endTime={shiftEndTime!}
           readOnly={readOnly}
+          onSaveShiftChanges={onShiftSave}
         />
       )}
     </div>

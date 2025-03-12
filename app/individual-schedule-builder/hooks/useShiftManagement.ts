@@ -1,14 +1,7 @@
 // useShiftManagement.ts
 import { useState, useEffect } from "react";
 import { days } from "../helper/helper";
-
-export interface Segment {
-  id: string;
-  label: string;
-  start: number;
-  end: number;
-  color: string;
-}
+import { Segment, Shift } from "@/types/types";
 
 interface ShiftTimesState {
   matchingShift: any;           
@@ -45,7 +38,7 @@ export function useShiftManagement(
     selectedDate.setDate(currentMonday.getDate() + dayIndex);
     const selectedDateString = selectedDate.toISOString().split("T")[0];
 
-    const matchingShift = userShifts.find((shift: any) => {    
+    const matchingShift = userShifts.find((shift: Shift) => {    
       if (!shift.shiftDate) {
         console.warn("shift.shiftDate is missing for shift:", shift);
         return false;
@@ -147,6 +140,7 @@ export function useShiftManagement(
       start,
       end,
       color,
+      location,
     };
     setShiftSegments((prev) => [...prev, newSegment]);
   };
@@ -174,6 +168,9 @@ export function useShiftManagement(
 
   // Now return everything we need, including times from shiftTimes state
   return {
+
+
+
     shiftSegments,
 
     // Form fields

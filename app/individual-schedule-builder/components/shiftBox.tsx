@@ -4,10 +4,10 @@ import Draggable, { DraggableEvent, DraggableData } from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
 import SegmentBox from "./segmentBox";
-import { FaCheck, FaPlus } from "react-icons/fa";
+import { FaCheck, FaPlus, FaUser } from "react-icons/fa";
 import { MdDragHandle } from "react-icons/md";
 import { v4 as uuidv4 } from 'uuid';
-import { Segment } from "@/types/types";
+import { Segment, Shift } from "@/types/types";
 
 
 interface ShiftBoxProps {
@@ -19,6 +19,7 @@ interface ShiftBoxProps {
   endTime: Date;
   shiftId: string;
   readOnly: boolean;
+  onSaveShiftChanges?: (shiftId: string, updatedData: Partial<Shift>) => void;
 }
 
 const SHIFT_HEIGHT = 100;
@@ -33,6 +34,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   endTime,
   shiftId,
   readOnly = false,
+  onSaveShiftChanges,
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null!);
   const [width, setWidth] = useState(initialWidth);
@@ -147,6 +149,12 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       });
       const data = await response.json();
       // Reset the dirty flag after a successful save
+      console.log(data);
+
+      if (onSaveShiftChanges) {
+        onSaveShiftChanges(shiftId, payload);
+      }
+
       setHasChanges(false);
     } catch (error) {
       console.error("Error saving shift:", error);
@@ -191,6 +199,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                 </button>
               )}
               <div className="shift-drag-handle h-[30px] bg-gray-600 flex items-center px-2 cursor-move">
+              <span><FaUser size={16} className="mr-2 text-blue-400"/></span>
                 <span className="mr-auto text-white text-sm">
                   {dynamicStartTime.toLocaleTimeString([], {
                     hour: "2-digit",

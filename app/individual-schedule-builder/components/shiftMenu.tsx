@@ -6,9 +6,10 @@ interface ShiftMenuProps {
   snapToGrid: boolean;
   setSnapToGrid: (value: boolean) => void;
   onAddShift: () => void; // Callback for Add Shift button
+  matchingShift: any,
 }
 
-const ShiftMenu: React.FC<ShiftMenuProps> = ({ snapToGrid, setSnapToGrid, onAddShift }) => {
+const ShiftMenu: React.FC<ShiftMenuProps> = ({ snapToGrid, setSnapToGrid, onAddShift, matchingShift }) => {
   const toggleSnapToGrid = () => {
     setSnapToGrid(!snapToGrid);
   };
@@ -37,7 +38,7 @@ const ShiftMenu: React.FC<ShiftMenuProps> = ({ snapToGrid, setSnapToGrid, onAddS
       >
         {snapToGrid ? "Disable Snap (15 mins)" : "Enable Snap (15 mins)"}
       </button>
-      <button
+      {!matchingShift && <button
         onClick={onAddShift}
         style={{
           display: "block",
@@ -50,7 +51,7 @@ const ShiftMenu: React.FC<ShiftMenuProps> = ({ snapToGrid, setSnapToGrid, onAddS
         }}
       >
         Add Shift
-      </button>
+      </button>}
     </motion.div>
   );
 };

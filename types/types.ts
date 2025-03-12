@@ -1,14 +1,19 @@
-interface ShiftSegment {
-  startTime: string;   
-  endTime: string;     
-  segmentType: string; 
-  location?: string;
-}
 
-interface ShiftData {
+export interface Shift {
+  id: string;
   startTime: string; 
   endTime: string;   
-  segments: ShiftSegment[];
+  segments: Segment[];
+  shiftDate: Date;
+}
+
+export interface Segment {
+  id: string;
+  label: string;
+  start: number;
+  end: number;
+  color: string;
+  location: string;
 }
 
 export interface Employee {
@@ -17,10 +22,10 @@ export interface Employee {
   location: string;
   name: string;
   role: string;
-  shifts: ShiftData[];
+  shifts: Shift[];
 }
 
-interface DraftShift {
+export interface DraftShift {
   isEditing: boolean;  
   isSegment: boolean;     
   employeeIndex: number;
@@ -34,16 +39,8 @@ interface DraftShift {
 }
 
 
-// shiftBox.tsx uses:
 
-export interface Segment {
-  id: string;
-  label: string;
-  start: number;
-  end: number;
-  color: string;
-  location: string;
-}
+
 
 
 

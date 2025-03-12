@@ -1,36 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { days } from "@/constants/constants";
+import { getMostRecentMonday } from "../individual-schedule-builder/helper/helper";
+import { Segment, Shift } from "@/types/types";
 
-const days = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
 
-// Helper: Get the most recent Monday given a date.
-const getMostRecentMonday = (date: Date): Date => {
-  const day = date.getDay();
-  const diff = day === 0 ? 6 : day - 1;
-  const monday = new Date(date);
-  monday.setDate(date.getDate() - diff);
-  return monday;
-};
-
-interface Segment {
-  startTime: string;
-  endTime: string;
-  segmentType: string;
-}
-
-interface Shift {
-  startTime: string;
-  endTime: string;
-  segments?: Segment[];
-}
 
 interface MiniTimelineProps {
   shifts: Shift[];

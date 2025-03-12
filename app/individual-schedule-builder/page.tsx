@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import WeekDayToggle from "./components/weekDayToggle";
 import ShiftMenu from "./components/shiftMenu";
 import Timeline from "./components/timeline";
@@ -14,15 +14,34 @@ import {
   getPreviousWeekMonday,
 } from "./helper/helper";
 import { useSession } from "next-auth/react";
+import { Shift } from "@/types/types";
 
 export default function Page() {
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [currentMonday, setCurrentMonday] = useState<Date>(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState<string>(defaultSelectedDay);
   const grid_height = 100;
-  const { userShifts } = useUserShifts();
+  const { userShifts: fetchedUserShifts } = useUserShifts();
+  const [userShifts, setUserShifts] = useState<Shift[]>([]);
   const readOnly = false;
   const { data: session } = useSession();
+
+  useEffect(() => {
+    if (fetchedUserShifts) {
+      setUserShifts(fetchedUserShifts);
+    }
+  }, [fetchedUserShifts]);
+
+  function handleShiftChangesSaved(shiftId: string, updatedData: Partial<Shift>) {
+    console.log(updatedData)
+    setUserShifts((prevShifts) =>
+      prevShifts.map((shift) =>
+        shift.id === shiftId
+          ? { ...shift, ...updatedData }
+          : shift
+      )
+    );
+  }
 
   /**
    * Handles user clicking previous week button
@@ -49,7 +68,6 @@ export default function Page() {
    * The userId is retrieved from the session.
    */
   const handleAddShift = async () => {
-    // Ensure the user is authenticated
     if (!session || !session.user) {
       console.error("User not authenticated");
       return;
@@ -111,7 +129,37 @@ export default function Page() {
         throw new Error("Failed to create shift");
       }
       const data = await response.json();
-      // Optionally: Refresh shifts or update local state as needed.
+      console.log("DATA", data);
+      // Optionally: Refresh shifts or update local state as needed:
+      // Merge into your existing userShifts
+
+
+
+      const createdShift = data.shift;
+      const newShift: Shift = {
+        id: createdShift.id,
+        userId: createdShift.userId,
+        // shiftDate, startTime, endTime are ISO strings on the server
+        shiftDate: new Date(createdShift.shiftDate),
+        startTime: new Date(createdShift.startTime),
+        endTime: new Date(createdShift.endTime),
+
+        // If your server returns booleans/strings, just reuse them
+        isRecurring: createdShift.isRecurring,
+        recurrenceRule: createdShift.recurrenceRule,
+        recurrenceEndDate: createdShift.recurrenceEndDate
+          ? new Date(createdShift.recurrenceEndDate)
+          : null,
+        notes: createdShift.notes,
+
+        // If server didn't return segments, just do an empty array
+        segments: createdShift.segments || [],
+      };
+
+      // Now you have a well-typed "Shift" object with real Date objects
+      // Add it to your local userShifts array
+      setUserShifts((prevShifts) => [...prevShifts, newShift]);
+
     } catch (error) {
       console.error("Error creating shift:", error);
     }
@@ -160,10 +208,12 @@ export default function Page() {
           shiftEndTime={shiftEndTime}
           gridHeight={grid_height}
           readOnly={readOnly}
+          onShiftSave={handleShiftChangesSaved}
         />
 
         <div className={styles.rightPanel}>
-          <ShiftMenu 
+          <ShiftMenu
+            matchingShift={matchingShift}
             snapToGrid={snapToGrid}
             setSnapToGrid={setSnapToGrid}
             onAddShift={handleAddShift}
