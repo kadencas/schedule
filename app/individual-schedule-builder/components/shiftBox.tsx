@@ -7,7 +7,7 @@ import SegmentBox from "./segmentBox";
 import { FaCheck, FaPlus, FaUser } from "react-icons/fa";
 import { MdDragHandle } from "react-icons/md";
 import { v4 as uuidv4 } from 'uuid';
-import { Segment, Shift } from "@/types/types";
+import { Entity, Segment, Shift } from "@/types/types";
 
 
 interface ShiftBoxProps {
@@ -19,6 +19,7 @@ interface ShiftBoxProps {
   endTime: Date;
   shiftId: string;
   readOnly: boolean;
+  entities: Entity[],
   onSaveShiftChanges?: (shiftId: string, updatedData: Partial<Shift>) => void;
 }
 
@@ -33,6 +34,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   startTime,
   endTime,
   shiftId,
+  entities,
   readOnly = false,
   onSaveShiftChanges,
 }) => {
@@ -125,6 +127,15 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
     setHasChanges(true);
   };
 
+  const handleEntityUpdate = (id: string, newEntity: Entity) => {
+    setLocalSegments((prev) =>
+      prev.map((seg) =>
+        seg.id === id ? { ...seg, entity: newEntity } : seg
+      )
+    );
+    setHasChanges(true);
+  };
+
   const handleSave = async () => {
     const payload = {
       shiftId,
@@ -138,8 +149,10 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
         location: seg.location,
         notes: "",
         color: seg.color,
+        entityId: seg.entity ? seg.entity.id : null,
       })),
     };
+    console.log(payload)
 
     try {
       const response = await fetch("/api/updateshiftwithsegments", {
@@ -198,9 +211,9 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                   Save
                 </button>
               )}
-              <div className="shift-drag-handle h-[30px] bg-gray-600 flex items-center px-2 cursor-move">
+              <div className="shift-drag-handle h-[30px] bg-gray-700 flex items-center px-2 cursor-move">
               <span><FaUser size={16} className="mr-2 text-blue-400"/></span>
-                <span className="mr-auto text-white text-sm">
+                <span className="mr-auto text-white text-md">
                   {dynamicStartTime.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -232,6 +245,8 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                     minutesPerPixel={MINUTES_PER_PIXEL}
                     onDelete={handleDeleteSegment}
                     readOnly={readOnly}
+                    entities={entities}
+                    onEntityUpdate={handleEntityUpdate}
                   />
                 ))}
                 <button

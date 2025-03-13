@@ -2,7 +2,7 @@ import React from "react";
 import ShiftBox from "./shiftBox";
 import { useContainerWidth } from "../hooks/useContainerWidth";
 import styles from "../styles/Timeline.module.css";
-import { Shift } from "@/types/types";
+import { Entity, Shift } from "@/types/types";
 
 interface TimelineProps {
   snapToGrid: boolean;
@@ -15,6 +15,7 @@ interface TimelineProps {
   gridHeight: number;
   readOnly: boolean;
   onShiftSave: (shiftId: string, updatedData: Partial<Shift>) => void;
+  entities: Entity[],
 }
 
 export default function Timeline({
@@ -26,6 +27,7 @@ export default function Timeline({
   shiftStartTime,
   shiftEndTime,
   gridHeight,
+  entities,
   readOnly = false,
   onShiftSave,
 }: TimelineProps) {
@@ -82,6 +84,7 @@ export default function Timeline({
           endTime={shiftEndTime!}
           readOnly={readOnly}
           onSaveShiftChanges={onShiftSave}
+          entities={entities}
         />
       )}
     </div>

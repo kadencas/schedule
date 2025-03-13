@@ -16,8 +16,14 @@ export async function GET(request: NextRequest) {
     const userShifts = await prisma.work_shifts.findMany({
       where: { userId },
       orderBy: { shiftDate: "desc" },
-      include: { segments: true },
-    });
+      include: { 
+        segments: {
+          include: {
+            entities: true
+        },
+      },
+    },
+  });
 
     return NextResponse.json({ success: true, data: userShifts });
   } catch (error: any) {

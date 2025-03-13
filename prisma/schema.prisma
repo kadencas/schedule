@@ -94,6 +94,7 @@ model work_shifts {
 model segments {
   id          String     @id @default(uuid())
   shiftId     String
+  entityId    String?
   segmentType String     // e.g., 'meeting', 'lunch', 'deepwork'
   location    String
   startTime   DateTime   // When the segment starts
@@ -104,6 +105,22 @@ model segments {
   updatedAt   DateTime   @default(now()) @updatedAt
   
   work_shifts work_shifts @relation(fields: [shiftId], references: [id])
+  entities    entities?   @relation(fields: [entityId], references: [id])
+}
+
+model entities {
+  id              String    @id @default(uuid())
+  name            String    @unique // e.g., "Circulation Desk", "Shelving"
+  type            EntityType // ENUM: LOCATION or TASK
+  icon            String?
+  color           String?
+  companyId       String
+  requiresCoverage Boolean   @default(false) // If true, alerts are triggered when empty
+  minCoverage     Int?       // Optional: Minimum number of staff required
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  segments        segments[] // One entity can have many segments assigned
 }
 
 model Invitation {
@@ -148,4 +165,9 @@ enum InvitationStatus {
   PENDING
   USED
   EXPIRED
+}
+
+enum EntityType {
+  TASK
+  STATION
 }

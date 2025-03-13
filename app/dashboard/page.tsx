@@ -13,6 +13,8 @@ import ViewWeekTab from "./ViewWeekTab";
 import ViewPeopleTab from "./ViewPeopleTab"
 import ViewScheduleBuilder from "./ViewScheduleBuilder"
 
+import ViewEntitiesTab from "./ViewEntitiesTab"
+
 const locales = {
   "en-US": require("date-fns/locale/en-US"),
 };
@@ -25,7 +27,7 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<"mySchedule" | "viewDay" | "viewWeek" | "people" | "scheduleEditor">(
+  const [activeTab, setActiveTab] = useState<"mySchedule" | "viewDay" | "viewWeek" | "people" | "scheduleEditor" | "viewEntities">(
     "mySchedule"
   );
   const { data: session, status } = useSession();
@@ -166,6 +168,15 @@ export default function Dashboard() {
           >
             Schedule Editor
           </button>
+          <button
+            onClick={() => setActiveTab("viewEntities")}
+            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "viewEntities"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+          >
+            Tags
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -174,6 +185,7 @@ export default function Dashboard() {
         {activeTab === "viewWeek" && <ViewWeekTab />}
         {activeTab === "people" && <ViewPeopleTab />}
         {activeTab === "scheduleEditor" && <ViewScheduleBuilder />}
+        {activeTab === "viewEntities" && <ViewEntitiesTab />}
       </main>
     </div>
   );

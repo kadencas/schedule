@@ -15,6 +15,7 @@ import {
 } from "./helper/helper";
 import { useSession } from "next-auth/react";
 import { Shift } from "@/types/types";
+import { useEntities } from "./hooks/useEntities";
 
 export default function Page() {
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -25,6 +26,7 @@ export default function Page() {
   const [userShifts, setUserShifts] = useState<Shift[]>([]);
   const readOnly = false;
   const { data: session } = useSession();
+  const {entities: entities} = useEntities();
 
   useEffect(() => {
     if (fetchedUserShifts) {
@@ -114,6 +116,7 @@ export default function Page() {
       recurrenceRule: null,
       recurrenceEndDate: null,
       notes: "",
+      entity: null,
     };
 
     try {
@@ -186,6 +189,8 @@ export default function Page() {
     handleCreateSegment,
   } = useShiftManagement(userShifts, currentMonday, selectedDay);
 
+console.log("Entities page:",entities);
+
   return (
     <div className={styles.container}>
       <WeekDayToggle
@@ -209,6 +214,7 @@ export default function Page() {
           gridHeight={grid_height}
           readOnly={readOnly}
           onShiftSave={handleShiftChangesSaved}
+          entities={entities}
         />
 
         <div className={styles.rightPanel}>

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     });
 
     for (const segment of segments) {
-      const { id, startTime: segStart, endTime: segEnd, segmentType, location, notes, color } = segment;
+      const { id, startTime: segStart, endTime: segEnd, segmentType, location, notes, color, entityId } = segment;
       await prisma.segments.upsert({
         where: { id },
         update: {
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
           location: location || '',
           notes: notes || '',
           color: color,
+          entityId: entityId || null,
         },
         create: {
           id, // Use the provided id from the client
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
           location: location || '',
           notes: notes || '',
           color: color,
+          entityId: entityId || null,
         },
       });
     }

@@ -8,6 +8,7 @@ export interface Shift {
 }
 
 export interface Segment {
+  entity: any;
   id: string;
   label: string;
   start: number;
@@ -36,6 +37,19 @@ export interface DraftShift {
   endHour: number;
   title: string;
   location?: string;
+}
+
+
+export interface Entity {
+  id: string;
+  name: string;
+  type: string; // "STATION" | "TASK"
+  icon?: string | null;
+  color?: string | null;
+  requiresCoverage: boolean;
+  minCoverage?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 
