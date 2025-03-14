@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { useAllEntitiesShifts } from "./useAllEntities";
-import EntityTimeline from "./EntityTimeline"; 
+import entityTimeline from "./entityTimeline"
 import WeekDayToggle from "@/app/individual-schedule-builder/components/weekDayToggle";
 import {
   defaultSelectedDay,
@@ -12,7 +11,7 @@ import {
 } from "@/app/individual-schedule-builder/helper/helper";
 
 export default function Page() {
-  const { entities, loading, error } = useAllEntitiesShifts(); // ✅ Fetch entities instead of employees
+  const { entities, loading, error } = useAllEntities();
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
 
@@ -27,15 +26,15 @@ export default function Page() {
   const formattedMondayDate = formatMondayDate(currentMonday);
 
   if (loading) {
-    return <p>Loading entities...</p>; // ✅ Updated label
+    return <p>Loading entities...</p>;
   }
 
   if (error) {
-    return <p>Error loading entities: {error.message}</p>; // ✅ Updated label
+    return <p>Error loading entities: {error.message}</p>;
   }
 
   return (
-    <div>
+    <div className="">
       <WeekDayToggle
         currentMonday={currentMonday}
         formattedMondayDate={formattedMondayDate}
@@ -45,9 +44,9 @@ export default function Page() {
         setSelectedDay={setSelectedDay}
       />
       {entities.map((entity) => (
-        <div key={entity.id}>
-          <EntityTimeline
-            entity={entity} // ✅ Pass entity instead of employee
+        <div key={employee.id} className="">
+          <EmployeeTimeline
+            employee={entity}
             currentMonday={currentMonday}
             selectedDay={selectedDay}
           />

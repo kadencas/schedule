@@ -13,6 +13,7 @@ import {
 
 export default function Page() {
   const { employees, loading, error } = useAllEmployeesShifts();
+  console.log("Employees", employees);
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
 
