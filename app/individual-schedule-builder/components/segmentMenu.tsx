@@ -24,14 +24,14 @@ interface SegmentEditorMenuProps {
 // If you already have this mapping in another file, you can import it.
 // Otherwise, define it here:
 const iconMap = {
-    LuLampDesk,
-    LuBookOpen,
-    LuClock,
-    TbBeach,
-    PiBooksFill,
-    BiSortZA,
-    MdToys,
-  };
+  LuLampDesk,
+  LuBookOpen,
+  LuClock,
+  TbBeach,
+  PiBooksFill,
+  BiSortZA,
+  MdToys,
+};
 
 const SegmentEditorMenu: React.FC<SegmentEditorMenuProps> = ({
   popupStyle,
@@ -54,6 +54,35 @@ const SegmentEditorMenu: React.FC<SegmentEditorMenuProps> = ({
       style={popupStyle}
       className="fixed bg-white border border-gray-300 rounded p-2 z-[1000]"
     >
+      {/* Entity Selection List */}
+      <div className="mb-2 max-h-40 overflow-y-auto border border-gray-200 rounded">
+        {entities.map((entity) => {
+          // Resolve the icon component if available
+          const EntityIcon = entity.icon ? iconMap[entity.icon] : null;
+          const isSelected = selectedEntityId === entity.id;
+
+          return (
+            <div
+              key={entity.id}
+              onClick={() => {
+                setSelectedEntityId(entity.id);
+                onEntityChange(entity);
+                onColorChange(entity.color);
+              }}
+              className={`flex items-center space-x-2 p-1 cursor-pointer ${
+                isSelected ? "bg-gray-200" : ""
+              }`}
+            >
+              {EntityIcon && <EntityIcon size={16} />}
+              <span>{entity.name}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Label for Custom Color & Text */}
+      <div className="mb-2 font-semibold">Custom Color & Text:</div>
+
       {/* Segment Name Input */}
       <input
         type="text"
@@ -74,34 +103,11 @@ const SegmentEditorMenu: React.FC<SegmentEditorMenuProps> = ({
               width: "24px",
               height: "24px",
               borderRadius: "4px",
-              border:
-                localColor === color ? "2px solid black" : "1px solid #ccc",
+              border: localColor === color ? "2px solid black" : "1px solid #ccc",
             }}
             className="cursor-pointer"
           />
         ))}
-      </div>
-
-      Tag:
-
-      {/* Entity Selection List */}
-      <div className="mb-2 max-h-40 overflow-y-auto border border-gray-200 rounded">
-        {entities.map((entity) => {
-          // Resolve the icon component if available
-          const EntityIcon = entity.icon ? iconMap[entity.icon] : null;
-          const isSelected = selectedEntityId === entity.id;
-
-          return (
-            <div
-            key={entity.id}
-            onClick={() => onEntityChange(entity)}
-            className={`flex items-center space-x-2 p-1 cursor-pointer ${isSelected ? "bg-gray-200" : ""}`}
-          >
-              {EntityIcon && <EntityIcon size={16} />}
-              <span>{entity.name}</span>
-            </div>
-          );
-        })}
       </div>
 
       {/* Action Buttons */}

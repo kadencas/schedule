@@ -20,7 +20,13 @@ export async function GET(request: Request) {
       where: { companyId },
       include: {
         work_shifts: {
-          include: { segments: true },
+          include: { 
+            segments: { 
+              include: { 
+                entities: true 
+              } 
+            } 
+          },
           orderBy: { shiftDate: "desc" }, // if you need ordering
         }
       },
@@ -46,6 +52,8 @@ export async function GET(request: Request) {
           location: segment.location,
           notes: segment.notes,
           color: segment.color,
+          entities: segment.entities
+
         })),
       })),
     }));

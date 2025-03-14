@@ -152,7 +152,6 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
         entityId: seg.entity ? seg.entity.id : null,
       })),
     };
-    console.log(payload)
 
     try {
       const response = await fetch("/api/updateshiftwithsegments", {
@@ -162,7 +161,6 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       });
       const data = await response.json();
       // Reset the dirty flag after a successful save
-      console.log(data);
 
       if (onSaveShiftChanges) {
         onSaveShiftChanges(shiftId, payload);

@@ -35,7 +35,6 @@ export default function Page() {
   }, [fetchedUserShifts]);
 
   function handleShiftChangesSaved(shiftId: string, updatedData: Partial<Shift>) {
-    console.log(updatedData)
     setUserShifts((prevShifts) =>
       prevShifts.map((shift) =>
         shift.id === shiftId
@@ -132,7 +131,6 @@ export default function Page() {
         throw new Error("Failed to create shift");
       }
       const data = await response.json();
-      console.log("DATA", data);
       // Optionally: Refresh shifts or update local state as needed:
       // Merge into your existing userShifts
 
@@ -188,8 +186,6 @@ export default function Page() {
     setNewSegmentColor,
     handleCreateSegment,
   } = useShiftManagement(userShifts, currentMonday, selectedDay);
-
-console.log("Entities page:",entities);
 
   return (
     <div className={styles.container}>

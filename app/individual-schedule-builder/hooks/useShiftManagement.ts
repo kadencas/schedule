@@ -17,7 +17,6 @@ export function useShiftManagement(
   selectedDay: string
 ) {
 
-  console.log(userShifts)
   const [shiftSegments, setShiftSegments] = useState<Segment[]>([]);
   const [newSegmentLabel, setNewSegmentLabel] = useState("");
   const [newSegmentStart, setNewSegmentStart] = useState(30);

@@ -15,7 +15,7 @@ interface TimelineProps {
   gridHeight: number;
   readOnly: boolean;
   onShiftSave: (shiftId: string, updatedData: Partial<Shift>) => void;
-  entities: Entity[],
+  entities?: Entity[],
 }
 
 export default function Timeline({

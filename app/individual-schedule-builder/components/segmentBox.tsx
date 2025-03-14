@@ -23,6 +23,8 @@ const iconMap = {
   MdToys: MdToys,
 };
 
+
+
 interface SegmentBoxProps {
   segment: Segment;
   snapToGrid: boolean;
@@ -152,20 +154,23 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
       shiftStartTime.getTime() + leftPx * minutesPerPixel * 60000
     );
     segmentStartTimeStr = segStart.toLocaleTimeString([], {
-      hour: "2-digit",
+      hour: "numeric",
       minute: "2-digit",
-    });
+      hour12: true,
+    }).replace(/\s*(AM|PM)/i, '');
     const segEnd = new Date(
       shiftStartTime.getTime() + (leftPx + widthPx) * minutesPerPixel * 60000
     );
     segmentEndTimeStr = segEnd.toLocaleTimeString([], {
-      hour: "2-digit",
+      hour: "numeric",
       minute: "2-digit",
-    });
+      hour12: true,
+    }).replace(/\s*(AM|PM)/i, '');
   }
 
 
   const EntityIcon = localEntity?.icon ? iconMap[localEntity.icon] : null;
+  const segmentDuration = minutesPerPixel ? widthPx * minutesPerPixel : 0;
 
   return (
     <Draggable
@@ -192,17 +197,21 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
             className="w-full h-full rounded shadow-lg flex items-center justify-center text-sm font-semibold text-black relative cursor-move"
             style={{ backgroundColor: localColor }}
           >
-            <span>{localLabel}</span>
+            {segmentDuration >= 31 && (
+              <span
+                style={{
+                  position: "relative",
+                  top: "4px",
+                  fontSize: "12px",
+                  fontStyle: "italic",
+                }}
+              >
+                {localLabel}
+              </span>
+            )}
             {/* Render these icons only if readOnly is false */}
             {!readOnly && (
               <>
-                <button
-                  onClick={handleDelete}
-                  className="absolute top-1 left-1 bg-transparent border-0 rounded-full cursor-pointer p-0 flex items-center justify-center"
-                  onMouseDown={(e) => e.stopPropagation()}
-                >
-                  <MdDelete size={17} />
-                </button>
                 <button
                   ref={editButtonRef}
                   onClick={toggleEditor}
@@ -211,9 +220,11 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
                 >
                   <FaPencilAlt size={14} className="text-white-500" />
                 </button>
-                <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
-                  <MdDragHandle size={15} />
-                </div>
+                {segmentDuration > 95 && (
+                  <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
+                    <MdDragHandle size={15} />
+                  </div>
+                )}
               </>
             )}
             {showEditor && !readOnly &&
@@ -233,13 +244,18 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
                 document.body
               )}
             {segmentStartTimeStr && segmentEndTimeStr && (
-              <div className="absolute bottom-1 left-1 text-[11px] text-gray-600">
+              <div className="absolute bottom-1 left-1 text-[10px] text-gray-600">
                 {`${segmentStartTimeStr} - ${segmentEndTimeStr}`}
               </div>
             )}
-            <div className="absolute bottom-1 right-1 px-1 py-1 mr-2 bg-opacity-75 rounded-lg bg-gray-200 text-[11px] text-gray-600 flex items-center">
-              {EntityIcon && <EntityIcon size={14} className="mr-1 text-gray-700" />}
-              {localEntity?.name && <span>{localEntity.name}</span>}
+            <div className="absolute top-1 left-1 px-[3px] py-[.5px] mr-2 bg-opacity-75 rounded-lg bg-gray-200 text-[11px] text-gray-600 flex items-center">
+              {EntityIcon && (
+                <EntityIcon
+                  size={14}
+                  className={`${segmentDuration >= 59 ? "mr-1" : ""} text-gray-700`}
+                />
+              )}
+              {localEntity?.name && segmentDuration >= 59 && <span>{localEntity.name}</span>}
             </div>
           </div>
         </ResizableBox>
