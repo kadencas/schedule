@@ -154,7 +154,7 @@ export default function ShiftBoxMenu({
           onChange={handleToggleRecurring}
           className="h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
         />
-        <span className="text-gray-700">Enable Recurrence</span>
+        <span className="text-gray-700">Recurring Shift</span>
       </label>
 
       {isRecurring && (

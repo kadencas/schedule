@@ -11,6 +11,7 @@ import { Entity, Segment, Shift } from "@/types/types";
 import { FaRepeat } from "react-icons/fa6";
 import ShiftBoxMenu from "./shiftBoxMenu";
 import ReactDOM from "react-dom";
+import { TbRepeat, TbRepeatOff } from "react-icons/tb";
 
 
 interface ShiftBoxProps {
@@ -250,18 +251,47 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                   -{" "}
                   {dynamicEndTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
-                {localIsRecurring && (
-                  <span ref={repeatIconRef} /* span so we can attach the ref */
-                    style={{ position: "absolute", top: 0, right: -15 }}>
-                    <FaRepeat
+
+                <span ref={repeatIconRef} style={{ position: "absolute", top: 0, right: -15 }}>
+                  {localIsRecurring ? (
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsRecurrenceMenuOpen(true);
                       }}
-                      style={{ color: "yellow", fontSize: "0.8rem", cursor: "pointer" }}
-                    />
-                  </span>
-                )}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <TbRepeat style={{ color: "#2bff00", fontSize: "1rem",  transform: "translateX(2px) translateY(-2px)",}} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsRecurrenceMenuOpen(true);
+                      }}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <TbRepeatOff
+                        style={{
+                          color: "grey",
+                          fontSize: "1rem",
+                          transform: "translateX(2px) translateY(-2px)", // shifts the icon right by 2px
+                        }}
+                      />
+                    </button>
+                  )}
+                </span>
+
                 {!readOnly && isRecurrenceMenuOpen && ReactDOM.createPortal(
                   <ShiftBoxMenu
                     isRecurring={localIsRecurring}
