@@ -221,6 +221,7 @@ export default function Page() {
           readOnly={readOnly}
           onShiftSave={handleShiftChangesSaved}
           entities={entities}
+          selectedDay={selectedDay}
         />
 
         <div className={styles.rightPanel}>

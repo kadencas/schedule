@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { days } from "../helper/helper";
 import { Segment, Shift } from "@/types/types";
+import { RRule } from "rrule";
 
 interface ShiftTimesState {
   matchingShift: any;           
@@ -39,22 +40,40 @@ export function useShiftManagement(
     selectedDate.setDate(currentMonday.getDate() + dayIndex);
     const selectedDateString = selectedDate.toISOString().split("T")[0];
 
-    const matchingShift = userShifts.find((shift: Shift) => {    
-      if (!shift.shiftDate) {
-        console.warn("shift.shiftDate is missing for shift:", shift);
-        return false;
+    function doesShiftOccurOn(shift: Shift, selectedDate: Date) {
+      // If not recurring, just compare dates (the current logic)
+      if (!shift.isRecurring || !shift.recurrenceRule) {
+        const shiftDate = new Date(shift.shiftDate);
+        return shiftDate.toDateString() === selectedDate.toDateString();
       }
     
-      const date = new Date(shift.shiftDate);
+      // If recurring, parse the RRULE
+      try {
+        const rule = RRule.fromString(shift.recurrenceRule);
     
-      if (isNaN(date.getTime())) {
-        console.warn("Invalid date for shift:", shift);
+        // For performance, we only generate occurrences in the week of the selectedDate
+        const startOfWeek = new Date(selectedDate);
+        startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // or your custom logic
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 7);
+    
+        // Generate all occurrences in this range
+        const occurrences = rule.between(startOfWeek, endOfWeek, true);
+    
+        // Check if selectedDate is in the occurrences
+        return occurrences.some(
+          (occurrence) => occurrence.toDateString() === selectedDate.toDateString()
+        );
+      } catch (err) {
+        console.error("Invalid Recurrence Rule:", shift.recurrenceRule, err);
         return false;
       }
-    
-      const shiftDateString = date.toISOString().split("T")[0];
-      return shiftDateString === selectedDateString;
-    });
+    }
+
+
+    const matchingShift = userShifts.find((shift: Shift) =>
+      doesShiftOccurOn(shift, selectedDate)
+    );
 
     // 3) Build the segments array for this matching shift (or empty if none)
     if (matchingShift) {

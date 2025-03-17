@@ -16,6 +16,7 @@ interface TimelineProps {
   readOnly: boolean;
   onShiftSave: (shiftId: string, updatedData: Partial<Shift>) => void;
   entities?: Entity[],
+  selectedDay: string;
 }
 
 export default function Timeline({
@@ -29,6 +30,7 @@ export default function Timeline({
   gridHeight,
   entities,
   readOnly = false,
+  selectedDay,
   onShiftSave,
 }: TimelineProps) {
   const { containerRef, width: containerWidth } = useContainerWidth();
@@ -73,19 +75,23 @@ export default function Timeline({
         );
       })}
       {matchingShift && (
-        <ShiftBox
-          key={matchingShift.id}
-          shiftId={matchingShift.id}
-          snapToGrid={snapToGrid}
-          segments={shiftSegments}
-          initialX={initialX}
-          initialWidth={initialWidth}
-          startTime={shiftStartTime!}
-          endTime={shiftEndTime!}
-          readOnly={readOnly}
-          onSaveShiftChanges={onShiftSave}
-          entities={entities}
-        />
+        <div key={`${matchingShift.id}-${selectedDay}`} className={styles.shiftAnimation}>
+          <ShiftBox
+            key={matchingShift.id}
+            shiftId={matchingShift.id}
+            snapToGrid={snapToGrid}
+            segments={shiftSegments}
+            initialX={initialX}
+            initialWidth={initialWidth}
+            startTime={shiftStartTime!}
+            endTime={shiftEndTime!}
+            readOnly={readOnly}
+            onSaveShiftChanges={onShiftSave}
+            entities={entities}
+            isRecurring={matchingShift.isRecurring}
+            recurrenceRule={matchingShift.recurrenceRule}
+          />
+        </div>
       )}
     </div>
   );

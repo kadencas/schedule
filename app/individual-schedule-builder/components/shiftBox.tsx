@@ -8,6 +8,9 @@ import { FaCheck, FaPlus, FaUser } from "react-icons/fa";
 import { MdDragHandle } from "react-icons/md";
 import { v4 as uuidv4 } from 'uuid';
 import { Entity, Segment, Shift } from "@/types/types";
+import { FaRepeat } from "react-icons/fa6";
+import ShiftBoxMenu from "./shiftBoxMenu";
+import ReactDOM from "react-dom";
 
 
 interface ShiftBoxProps {
@@ -20,6 +23,8 @@ interface ShiftBoxProps {
   shiftId: string;
   readOnly: boolean;
   entities: Entity[],
+  isRecurring: boolean;
+  recurrenceRule: string;
   onSaveShiftChanges?: (shiftId: string, updatedData: Partial<Shift>) => void;
 }
 
@@ -35,6 +40,8 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   endTime,
   shiftId,
   entities,
+  isRecurring,
+  recurrenceRule,
   readOnly = false,
   onSaveShiftChanges,
 }) => {
@@ -44,8 +51,18 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   const [localSegments, setLocalSegments] = useState<Segment[]>(segments);
   // Dirty flag for unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
+  const [localIsRecurring, setLocalIsRecurring] = useState(isRecurring);
+  const [localRecurrenceRule, setLocalRecurrenceRule] = useState(recurrenceRule);
+  const [isRecurrenceMenuOpen, setIsRecurrenceMenuOpen] = useState(false);
 
   const grid: [number, number] | undefined = snapToGrid ? [25, 25] : undefined;
+
+  const handleRecurrenceChange = (newRule: string | null, recurring: boolean) => {
+    setLocalIsRecurring(recurring);
+    // Use an empty string or null as per backend expectations
+    setLocalRecurrenceRule(newRule || "");
+  };
+
 
   const handleLabelUpdate = (id: string, newLabel: string) => {
     setLocalSegments((prev) =>
@@ -141,6 +158,8 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       shiftId,
       startTime: dynamicStartTime.toISOString(),
       endTime: dynamicEndTime.toISOString(),
+      isRecurring: localIsRecurring,
+      recurrenceRule: localRecurrenceRule,
       segments: localSegments.map((seg) => ({
         id: seg.id,
         startTime: new Date(dynamicStartTime.getTime() + seg.start * 60000).toISOString(),
@@ -175,98 +194,130 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   const maxSegmentEndPx =
     localSegments.length > 0 ? Math.max(...localSegments.map((seg) => seg.end)) / 0.6 : 0;
 
-    return (
-      <Draggable
-        nodeRef={nodeRef}
-        axis="x"
-        grid={grid}
-        position={position}
-        onDrag={!readOnly ? handleDrag : undefined}
-        onStop={!readOnly ? handleDrag : undefined}
-        handle=".shift-drag-handle"
-        cancel=".react-resizable-handle, .segment-container"
-        disabled={readOnly} // disables dragging when readOnly is true
-      >
-        <div ref={nodeRef} className="absolute h-[100px]" style={{ width }}>
-          <ResizableBox
-            width={width}
-            height={SHIFT_HEIGHT}
-            axis="x"
-            resizeHandles={readOnly ? [] : ["e"]} // no handles if readOnly
-            minConstraints={[150, SHIFT_HEIGHT]}
-            maxConstraints={[1000, SHIFT_HEIGHT]}
-            onResize={!readOnly ? handleResize : undefined}
-            onResizeStop={!readOnly ? handleResizeStop : undefined}
-          >
-            {/* SHIFT container */}
-            <div className="w-full h-full bg-gray-300 bg-opacity-60 rounded-md overflow-hidden relative">
-              {hasChanges && (
-                <button
-                  onClick={handleSave}
-                  className="absolute top-1 right-1 bg-green-500 text-white px-2 py-1 rounded text-xs flex"
-                >
-                  <FaCheck size={16} className="mr-1" />
-                  Save
-                </button>
-              )}
-              <div className="shift-drag-handle h-[30px] bg-gray-700 flex items-center px-2 cursor-move">
-              <span><FaUser size={16} className="mr-2 text-blue-400"/></span>
-                <span className="mr-auto text-white text-md">
-                  {dynamicStartTime.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
+  const repeatIconRef = useRef<HTMLSpanElement>(null);
+
+  let menuStyle: React.CSSProperties = {};
+  if (repeatIconRef.current) {
+    const rect = repeatIconRef.current.getBoundingClientRect();
+    menuStyle = {
+      position: "absolute",
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      zIndex: 9999, // make sure it's on top
+    };
+  }
+
+  return (
+    <Draggable
+      nodeRef={nodeRef}
+      axis="x"
+      grid={grid}
+      position={position}
+      onDrag={!readOnly ? handleDrag : undefined}
+      onStop={!readOnly ? handleDrag : undefined}
+      handle=".shift-drag-handle"
+      cancel=".react-resizable-handle, .segment-container"
+      disabled={readOnly} // disables dragging when readOnly is true
+    >
+      <div ref={nodeRef} className="absolute h-[100px]" style={{ width }}>
+        <ResizableBox
+          width={width}
+          height={SHIFT_HEIGHT}
+          axis="x"
+          resizeHandles={readOnly ? [] : ["e"]} // no handles if readOnly
+          minConstraints={[150, SHIFT_HEIGHT]}
+          maxConstraints={[1000, SHIFT_HEIGHT]}
+          onResize={!readOnly ? handleResize : undefined}
+          onResizeStop={!readOnly ? handleResizeStop : undefined}
+        >
+          {/* SHIFT container */}
+          <div className="w-full h-full bg-gray-300 bg-opacity-60 rounded-md overflow-hidden relative">
+            {hasChanges && (
+              <button
+                onClick={handleSave}
+                className="absolute top-1 right-1 bg-green-500 text-white px-2 py-1 rounded text-xs flex"
+              >
+                <FaCheck size={16} className="mr-1" />
+                Save
+              </button>
+            )}
+            <div className="shift-drag-handle h-[30px] bg-gray-700 flex items-center px-2 cursor-move">
+              <span><FaUser size={16} className="mr-2 text-white" /></span>
+
+              <div className="relative">
+                <span className="block text-white text-md">
+                  {dynamicStartTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
                   -{" "}
-                  {dynamicEndTime.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {dynamicEndTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </span>
-                
-                {!readOnly && (
+                {localIsRecurring && (
+                  <span ref={repeatIconRef} /* span so we can attach the ref */
+                    style={{ position: "absolute", top: 0, right: -15 }}>
+                    <FaRepeat
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsRecurrenceMenuOpen(true);
+                      }}
+                      style={{ color: "yellow", fontSize: "0.8rem", cursor: "pointer" }}
+                    />
+                  </span>
+                )}
+                {!readOnly && isRecurrenceMenuOpen && ReactDOM.createPortal(
+                  <ShiftBoxMenu
+                    isRecurring={localIsRecurring}
+                    recurrenceRule={localRecurrenceRule}
+                    onRecurrenceChange={handleRecurrenceChange}
+                    onClose={() => setIsRecurrenceMenuOpen(false)}
+                    style={menuStyle}
+                  />,
+                  document.body
+                )}
+              </div>
+
+              {!readOnly && (
                 <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
                   <MdDragHandle size={15} />
                 </div>
-                  )}
-              </div>
-              <div className="relative h-[70px]">
-                {localSegments.map((seg) => (
-                  <SegmentBox
-                    key={seg.id}
-                    segment={seg}
-                    snapToGrid={snapToGrid}
-                    onUpdate={handleSegmentUpdate}
-                    onColorUpdate={handleColorUpdate}
-                    className="segment-container"
-                    onLabelUpdate={handleLabelUpdate}
-                    shiftStartTime={dynamicStartTime}
-                    minutesPerPixel={MINUTES_PER_PIXEL}
-                    onDelete={handleDeleteSegment}
-                    readOnly={readOnly}
-                    entities={entities}
-                    onEntityUpdate={handleEntityUpdate}
-                  />
-                ))}
-                <button
-                  onClick={handleAddSegment}
-                  style={{
-                    position: "absolute",
-                    left: `${maxSegmentEndPx + 10}px`,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                  }}
-                  className="text-grey rounded-full p-1"
-                >
-                  {!readOnly && (
-                  <FaPlus size={12} />
-                  )}
-                </button>
-              </div>
+              )}
             </div>
-          </ResizableBox>
-        </div>
-      </Draggable>
-    );
+            <div className="relative h-[70px]">
+              {localSegments.map((seg) => (
+                <SegmentBox
+                  key={seg.id}
+                  segment={seg}
+                  snapToGrid={snapToGrid}
+                  onUpdate={handleSegmentUpdate}
+                  onColorUpdate={handleColorUpdate}
+                  className="segment-container"
+                  onLabelUpdate={handleLabelUpdate}
+                  shiftStartTime={dynamicStartTime}
+                  minutesPerPixel={MINUTES_PER_PIXEL}
+                  onDelete={handleDeleteSegment}
+                  readOnly={readOnly}
+                  entities={entities}
+                  onEntityUpdate={handleEntityUpdate}
+                />
+              ))}
+              <button
+                onClick={handleAddSegment}
+                style={{
+                  position: "absolute",
+                  left: `${maxSegmentEndPx + 10}px`,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
+                className="text-grey rounded-full p-1"
+              >
+                {!readOnly && (
+                  <FaPlus size={12} />
+                )}
+              </button>
+            </div>
+          </div>
+        </ResizableBox>
+      </div>
+    </Draggable>
+  );
 };
 
 export default ShiftBox;
