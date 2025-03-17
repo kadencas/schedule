@@ -14,6 +14,7 @@ model companies {
   updatedAt         DateTime        @default(now()) @updatedAt
   custom_roles      custom_roles[]
   work_shifts       work_shifts[]
+  entity_shifts entity_shifts[]
   time_off_requests time_off_requests[]
   users             users[]
   invitations  Invitation[]  @relation("CompanyInvitations")
@@ -91,6 +92,26 @@ model work_shifts {
   segments          segments[]
 }
 
+model entity_shifts {
+  id                String    @id @default(uuid())
+  entityId          String
+  companyId         String
+  shiftDate         DateTime  // Date for the first occurrence of the shift
+  startTime         DateTime  // Start time of the shift
+  endTime           DateTime  // End time of the shift
+  isRecurring       Boolean   @default(false)
+  recurrenceRule    String?   // e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR"
+  recurrenceEndDate DateTime? // Optional: when the recurrence stops
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+
+  companies         companies @relation(fields: [companyId], references: [id])
+  entities          entities  @relation(fields: [entityId], references: [id])
+  segments          segments[]
+}
+
+
 model segments {
   id          String     @id @default(uuid())
   shiftId     String
@@ -100,11 +121,13 @@ model segments {
   startTime   DateTime   // When the segment starts
   endTime     DateTime   // When the segment ends
   notes       String?
+  entityShiftId String?
   color       String     @default("#FFFFFF")
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now()) @updatedAt
   
   work_shifts work_shifts @relation(fields: [shiftId], references: [id])
+  entity_shifts entity_shifts? @relation(fields: [entityShiftId], references: [id])
   entities    entities?   @relation(fields: [entityId], references: [id])
 }
 
@@ -120,6 +143,7 @@ model entities {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now()) @updatedAt
 
+  entity_shifts   entity_shifts[]
   segments        segments[] // One entity can have many segments assigned
 }
 

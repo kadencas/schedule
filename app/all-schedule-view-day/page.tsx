@@ -12,8 +12,11 @@ import {
 } from "@/app/individual-schedule-builder/helper/helper";
 
 export default function Page() {
+
+  // instead of getting one array of shifts, we go get all employees, and all of their shifts. 
   const { employees, loading, error } = useAllEmployeesShifts();
-  console.log("Employees", employees);
+
+
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
 

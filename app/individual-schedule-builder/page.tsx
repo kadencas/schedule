@@ -22,18 +22,30 @@ export default function Page() {
   const [currentMonday, setCurrentMonday] = useState<Date>(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState<string>(defaultSelectedDay);
   const grid_height = 100;
-  const { userShifts: fetchedUserShifts } = useUserShifts();
   const [userShifts, setUserShifts] = useState<Shift[]>([]);
   const readOnly = false;
   const { data: session } = useSession();
-  const {entities: entities} = useEntities();
+  const { entities: entities } = useEntities();
 
+  // returns an object and renames userShifts fetchedUser shifts to indicate they were pulled from backend
+  const { userShifts: fetchedUserShifts } = useUserShifts(); 
+
+  /**
+   * anytime fetchedUserShifts changes (backend changes), update the array
+   */
   useEffect(() => {
     if (fetchedUserShifts) {
       setUserShifts(fetchedUserShifts);
     }
   }, [fetchedUserShifts]);
 
+  /**
+   * takes shift ID for shift to update, and some updated data,
+   * looks at userShifts array and updates the corresponding data
+   * 
+   * @param shiftId 
+   * @param updatedData 
+   */
   function handleShiftChangesSaved(shiftId: string, updatedData: Partial<Shift>) {
     setUserShifts((prevShifts) =>
       prevShifts.map((shift) =>
@@ -133,8 +145,6 @@ export default function Page() {
       const data = await response.json();
       // Optionally: Refresh shifts or update local state as needed:
       // Merge into your existing userShifts
-
-
 
       const createdShift = data.shift;
       const newShift: Shift = {
