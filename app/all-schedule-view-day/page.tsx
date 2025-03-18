@@ -10,6 +10,8 @@ import {
   getNextWeekMonday,
   getPreviousWeekMonday,
 } from "@/app/individual-schedule-builder/helper/helper";
+import styles from "@/app/individual-schedule-builder/styles/Timeline.module.css";
+
 
 export default function Page() {
 
@@ -49,7 +51,8 @@ export default function Page() {
         setSelectedDay={setSelectedDay}
       />
       {employees.map((employee) => (
-        <div key={employee.id} className="">
+        <div key={`${employee.id}-${selectedDay}`}
+        className={`${styles.shiftAnimation} pointer-events-none cursor-default`}>
           <EmployeeTimeline
             employee={employee}
             currentMonday={currentMonday}

@@ -41,6 +41,8 @@ export async function GET(request: Request) {
       role: user.role,             
       shifts: user.work_shifts.map(shift => ({
         id: shift.id, // include shift id
+        isRecurring: shift.isRecurring,
+        recurrenceRule: shift.recurrenceRule,
         shiftDate: shift.shiftDate ? shift.shiftDate.toISOString() : null, // include shiftDate here
         startTime: shift.startTime.toISOString(),
         endTime: shift.endTime.toISOString(),
