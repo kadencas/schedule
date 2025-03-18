@@ -39,6 +39,10 @@ export default function Page() {
     }
   }, [fetchedUserShifts]);
 
+  useEffect(() => {
+    console.log("UserShifts changed:", userShifts);
+  }, [userShifts]);
+
   /**
    * takes shift ID for shift to update, and some updated data,
    * looks at userShifts array and updates the corresponding data
@@ -47,6 +51,7 @@ export default function Page() {
    * @param updatedData 
    */
   function handleShiftChangesSaved(shiftId: string, updatedData: Partial<Shift>) {
+    console.log("updated data", updatedData)
     setUserShifts((prevShifts) =>
       prevShifts.map((shift) =>
         shift.id === shiftId
@@ -54,6 +59,7 @@ export default function Page() {
           : shift
       )
     );
+    console.log("pre", userShifts)
   }
 
   /**
@@ -176,6 +182,7 @@ export default function Page() {
     }
   };
 
+  console.log("shifts for processing", userShifts)
   /**
    * Process shifts and segments for the Timeline component.
    */

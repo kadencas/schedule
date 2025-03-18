@@ -27,6 +27,7 @@ export const useUserShifts = () => {
 
     fetchUserShifts();
   }, [session, status]);
+  console.log("backend api", userShifts)
 
   return { userShifts, session, status };
 };

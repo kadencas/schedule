@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No payload provided" }, { status: 400 });
   }
 
-  const { shiftId, startTime, endTime, segments } = payload;
+  const { shiftId, startTime, endTime, segments, isRecurring, recurrenceRule } = payload;
   if (!shiftId || !startTime || !endTime || !Array.isArray(segments)) {
     return NextResponse.json(
       { error: "Missing shiftId, startTime, endTime or segments" },
@@ -32,6 +32,8 @@ export async function POST(request: Request) {
       data: {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        isRecurring: isRecurring,
+        recurrenceRule: recurrenceRule,
       },
     });
 

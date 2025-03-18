@@ -1,5 +1,6 @@
 
 export interface Shift {
+  recurrenceRule: string;
   id: string;
   startTime: string; 
   endTime: string;   

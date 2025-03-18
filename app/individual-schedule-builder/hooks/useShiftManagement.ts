@@ -38,7 +38,7 @@ export function useShiftManagement(
     const dayIndex = days.indexOf(selectedDay);
     const selectedDate = new Date(currentMonday);
     selectedDate.setDate(currentMonday.getDate() + dayIndex);
-    const selectedDateString = selectedDate.toISOString().split("T")[0];
+
 
     function doesShiftOccurOn(shift: Shift, selectedDate: Date) {
       // If not recurring, just compare dates (the current logic)
@@ -74,6 +74,7 @@ export function useShiftManagement(
     const matchingShift = userShifts.find((shift: Shift) =>
       doesShiftOccurOn(shift, selectedDate)
     );
+    console.log("matching:", matchingShift)
 
     // 3) Build the segments array for this matching shift (or empty if none)
     if (matchingShift) {
@@ -187,11 +188,10 @@ export function useShiftManagement(
     setNewSegmentColor("#ffc4d6");
   };
 
+  console.log(shiftSegments);
+
   // Now return everything we need, including times from shiftTimes state
   return {
-
-
-
     shiftSegments,
 
     // Form fields

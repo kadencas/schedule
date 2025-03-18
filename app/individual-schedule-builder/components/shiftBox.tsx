@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Draggable, { DraggableEvent, DraggableData } from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
@@ -50,6 +50,8 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   const [width, setWidth] = useState(initialWidth);
   const [position, setPosition] = useState({ x: initialX, y: 0 });
   const [localSegments, setLocalSegments] = useState<Segment[]>(segments);
+
+
   // Dirty flag for unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
   const [localIsRecurring, setLocalIsRecurring] = useState(isRecurring);
@@ -63,6 +65,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
     // Use an empty string or null as per backend expectations
     setLocalRecurrenceRule(newRule || "");
   };
+
 
 
   const handleLabelUpdate = (id: string, newLabel: string) => {
@@ -155,6 +158,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   };
 
   const handleSave = async () => {
+    console.log("local segs to save", localSegments)
     const payload = {
       shiftId,
       startTime: dynamicStartTime.toISOString(),
@@ -165,13 +169,16 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
         id: seg.id,
         startTime: new Date(dynamicStartTime.getTime() + seg.start * 60000).toISOString(),
         endTime: new Date(dynamicStartTime.getTime() + seg.end * 60000).toISOString(),
-        segmentType: seg.label || "default",
+        segmentType: seg.label || " ",
         location: seg.location,
         notes: "",
         color: seg.color,
-        entityId: seg.entity ? seg.entity.id : null,
+        entities: seg.entity || null,
+        entityId: seg.entity?.id ?? null,
       })),
     };
+
+    console.log("payload", payload)
 
     try {
       const response = await fetch("/api/updateshiftwithsegments", {
