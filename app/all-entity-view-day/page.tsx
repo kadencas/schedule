@@ -4,9 +4,11 @@ import { useAllEntitiesShifts } from "./useAllEntities";
 import EntityTimeline from "./entityTimeline";
 import { defaultSelectedDay, formatMondayDate, getMostRecentMonday, getNextWeekMonday, getPreviousWeekMonday } from "../individual-schedule-builder/helper/helper";
 import WeekDayToggle from "../individual-schedule-builder/components/weekDayToggle";
+import { useUserShifts } from "../individual-schedule-builder/hooks/useUserShift";
 
 export default function EntityShiftsPage() {
   const { entities, loading, error } = useAllEntitiesShifts();
+  const { userShifts } = useUserShifts(); 
 
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
@@ -37,6 +39,7 @@ export default function EntityShiftsPage() {
       {entities.map((entity) => (
         <div key={`${entity.id}-${selectedDay}`} className="">
           <EntityTimeline
+            userShifts={userShifts}
             entity={entity}
             currentMonday={currentMonday}
             selectedDay={selectedDay}

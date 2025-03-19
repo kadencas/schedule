@@ -2,18 +2,24 @@ import React, { useMemo } from "react";
 import Timeline from "@/app/individual-schedule-builder/components/timeline";
 import { useShiftManagement } from "@/app/individual-schedule-builder/hooks/useShiftManagement";
 import { Entity } from "@/types/types";
+import { useEntityShiftManagement } from "./useEntityShiftManagement";
 
 interface EntityTimelineProps {
   entity: Entity;
   currentMonday: Date;
   selectedDay: string;
+  userShifts: any[];
 }
 
 export default function EntityTimeline({
   entity,
   currentMonday,
   selectedDay,
+  userShifts,
 }: EntityTimelineProps) {
+
+  console.log("entity", entity)
+  console.log("userShifts", userShifts)
 
   const snapToGrid = true;
   const grid_height = 100;
@@ -40,7 +46,8 @@ export default function EntityTimeline({
     shiftEndTime,
     initialX,
     initialWidth,
-  } = useShiftManagement(entityShifts, currentMonday, selectedDay);
+  } = useEntityShiftManagement(userShifts, entityShifts, currentMonday, selectedDay);
+  console.log("matching entity shift", matchingShift)
 
   return (
     <div style={{ position: "relative" }}>
