@@ -13,13 +13,17 @@
   }
   
   .rightPanel {
-    width: 500px;
+    width: 300px;
     background-color: #fff;
     border-left: 1px solid #ddd;
     box-sizing: border-box;
     padding: 16px;
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow-y: auto;
+    position: relative;
+    z-index: 9999;
+    margin-top: 20px; /* Moves the panel down */
   }
   
   .toggleButton {

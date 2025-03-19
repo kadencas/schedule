@@ -12,6 +12,7 @@ import { FaRepeat } from "react-icons/fa6";
 import ShiftBoxMenu from "./shiftBoxMenu";
 import ReactDOM from "react-dom";
 import { TbRepeat, TbRepeatOff } from "react-icons/tb";
+import { RRule } from "rrule";
 
 
 interface ShiftBoxProps {
@@ -26,6 +27,7 @@ interface ShiftBoxProps {
   entities: Entity[],
   isRecurring: boolean;
   recurrenceRule: string;
+  user: string,
   onSaveShiftChanges?: (shiftId: string, updatedData: Partial<Shift>) => void;
 }
 
@@ -43,6 +45,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   entities,
   isRecurring,
   recurrenceRule,
+  user,
   readOnly = false,
   onSaveShiftChanges,
 }) => {
@@ -112,7 +115,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
     }
     const newSeg: Segment = {
       id: uuidv4(),
-      label: "Segment",
+      label: " ",
       start: newStart,
       end: newStart + 100,
       color: "#ffffff",
@@ -155,6 +158,17 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       )
     );
     setHasChanges(true);
+  };
+
+  const getHumanReadableRRule = (ruleString: string) => {
+    if (!ruleString) return "No recurrence rule specified";
+    try {
+      return RRule.fromString(ruleString).toText();
+    } catch (error) {
+      console.error("Failed to parse RRule string:", ruleString, error);
+      // Fallback to the raw rule string or a default message
+      return ruleString || "N/A";
+    }
   };
 
   const handleSave = async () => {
@@ -271,7 +285,9 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                         border: "none",
                         padding: 0,
                         cursor: "pointer",
+                        pointerEvents: "auto",
                       }}
+                      title={`Repeats: ${getHumanReadableRRule(localRecurrenceRule)}`}
                     >
                       <TbRepeat style={{ color: "#2bff00", fontSize: "1rem",  transform: "translateX(2px) translateY(-2px)",}} />
                     </button>
@@ -333,6 +349,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                   readOnly={readOnly}
                   entities={entities}
                   onEntityUpdate={handleEntityUpdate}
+                  user={user}
                 />
               ))}
               <button

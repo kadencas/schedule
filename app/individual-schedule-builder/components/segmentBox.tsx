@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import Draggable, { DraggableEvent, DraggableData } from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
-import { FaCheck, FaPencilAlt, FaTimes } from "react-icons/fa";
+import { FaCheck, FaPencilAlt, FaTimes, FaUser } from "react-icons/fa";
 import { MdDelete, MdDragHandle, MdToys } from "react-icons/md";
 import { Entity, Segment } from "@/types/types";
 import { LuBookOpen, LuClock, LuLampDesk } from "react-icons/lu";
@@ -38,6 +38,7 @@ interface SegmentBoxProps {
   className?: string;
   shiftStartTime?: Date;
   minutesPerPixel?: number;
+  user: string,
 }
 
 const SNAP_PX = 25;
@@ -55,6 +56,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   shiftStartTime,
   minutesPerPixel,
   readOnly,
+  user = "",
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null!);
   const editButtonRef = useRef<HTMLButtonElement>(null);
@@ -194,7 +196,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
           handleSize={[8, 8]}
         >
           <div
-            className="w-full h-full rounded shadow-lg flex items-center justify-center text-sm font-semibold text-black relative cursor-move"
+            className="w-full h-full rounded shadow-lg flex items-center justify-center text-sm text-black relative cursor-move"
             style={{ backgroundColor: localColor }}
           >
             {segmentDuration >= 31 && (
@@ -202,7 +204,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
                 style={{
                   position: "relative",
                   top: "4px",
-                  fontSize: "12px",
+                  fontSize: "11px",
                   fontStyle: "italic",
                 }}
               >
@@ -243,9 +245,15 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
                 />,
                 document.body
               )}
-            {segmentStartTimeStr && segmentEndTimeStr && (
-              <div className="absolute bottom-1 left-1 text-[10px] text-gray-600">
-                {`${segmentStartTimeStr} - ${segmentEndTimeStr}`}
+            {segmentStartTimeStr && segmentEndTimeStr && segmentDuration >= 79 && (
+              <div className="absolute bottom-1 right-1 text-[11px] text-gray-800 font-semibold">
+                {` ${segmentStartTimeStr} - ${segmentEndTimeStr}`}
+              </div>
+            )}
+            {user && segmentDuration >= 59 && (
+              <div className="absolute bottom-1 left-1 text-[11px] text-gray-800 font-semibold">
+                
+                {`${user}`}
               </div>
             )}
             <div className="absolute top-1 left-1 px-[3px] py-[.5px] mr-2 bg-opacity-75 rounded-lg bg-gray-200 text-[11px] text-gray-600 flex items-center">

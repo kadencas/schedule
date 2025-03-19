@@ -60,6 +60,7 @@ export default function EmployeeTimeline({
       {/* Wrap the Timeline in a div with a left margin to shift it right */}
       <div style={{ marginLeft: "60px" }}>
         <Timeline
+          user={employee.name}
           snapToGrid={snapToGrid}
           shiftSegments={shiftSegments}
           matchingShift={matchingShift}

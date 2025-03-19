@@ -3,37 +3,46 @@ import React, { useState } from "react";
 import { useAllEntitiesShifts } from "./useAllEntities";
 import EntityTimeline from "./entityTimeline";
 import { defaultSelectedDay, formatMondayDate, getMostRecentMonday, getNextWeekMonday, getPreviousWeekMonday } from "../individual-schedule-builder/helper/helper";
+import WeekDayToggle from "../individual-schedule-builder/components/weekDayToggle";
 
 export default function EntityShiftsPage() {
   const { entities, loading, error } = useAllEntitiesShifts();
 
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
-    const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
-  
-    const handlePreviousWeek = () => {
-      setCurrentMonday(getPreviousWeekMonday(currentMonday));
-    };
-  
-    const handleNextWeek = () => {
-      setCurrentMonday(getNextWeekMonday(currentMonday));
-    };
-  
-    const formattedMondayDate = formatMondayDate(currentMonday);
+  const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
+
+  const handlePreviousWeek = () => {
+    setCurrentMonday(getPreviousWeekMonday(currentMonday));
+  };
+
+  const handleNextWeek = () => {
+    setCurrentMonday(getNextWeekMonday(currentMonday));
+  };
+
+  const formattedMondayDate = formatMondayDate(currentMonday);
 
   if (loading) return <p>Loading entity shifts...</p>;
   if (error) return <p>Error loading entity shifts: {error.message}</p>;
 
   return (
     <div>
+      <WeekDayToggle
+        currentMonday={currentMonday}
+        formattedMondayDate={formattedMondayDate}
+        handlePreviousWeek={handlePreviousWeek}
+        handleNextWeek={handleNextWeek}
+        selectedDay={selectedDay}
+        setSelectedDay={setSelectedDay}
+      />
       {entities.map((entity) => (
-  <div key={entity.id} className="">
-    <EntityTimeline
-      entity={entity}
-      currentMonday={currentMonday}
-      selectedDay={selectedDay}
-    />
-  </div>
-))}
+        <div key={`${entity.id}-${selectedDay}`} className="">
+          <EntityTimeline
+            entity={entity}
+            currentMonday={currentMonday}
+            selectedDay={selectedDay}
+          />
+        </div>
+      ))}
     </div>
   );
 }

@@ -17,6 +17,7 @@ interface TimelineProps {
   onShiftSave: (shiftId: string, updatedData: Partial<Shift>) => void;
   entities?: Entity[],
   selectedDay: string;
+  user: string,
 }
 
 export default function Timeline({
@@ -31,6 +32,7 @@ export default function Timeline({
   entities,
   readOnly = false,
   selectedDay,
+  user,
   onShiftSave,
 }: TimelineProps) {
   const { containerRef, width: containerWidth } = useContainerWidth();
@@ -86,6 +88,7 @@ export default function Timeline({
             startTime={shiftStartTime!}
             endTime={shiftEndTime!}
             readOnly={readOnly}
+            user={user}
             onSaveShiftChanges={onShiftSave}
             entities={entities}
             isRecurring={matchingShift.isRecurring}
