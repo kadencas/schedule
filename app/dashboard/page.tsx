@@ -5,6 +5,7 @@ import { dateFnsLocalizer } from "react-big-calendar";
 import { parse, startOfWeek, getDay, format } from "date-fns";
 import { useSession, signOut } from "next-auth/react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { Employee } from "@/types/types";
 
 // import tabs
 import MyScheduleTab from "./MyScheduleTab";
@@ -29,17 +30,14 @@ const localizer = dateFnsLocalizer({
 
 export default function Dashboard() {
   const [activeMainTab, setActiveMainTab] = useState<"me" | "peopleSchedule" | "tagSchedule" | "management">("me");
-  const [activeSubTab, setActiveSubTab] = useState<"mySchedule" | "scheduleEditor" | "myAccount" | "viewDay" | "viewWeek" | "tagsSchedule" | "people" | "tags">("mySchedule");
+  const [activeSubTab, setActiveSubTab] = useState<"mySchedule" | "scheduleEditor" | "viewDay" | "viewWeek" | "tagsSchedule" | "people" | "tags">("mySchedule");
   const { data: session, status } = useSession();
   const userName = session?.user?.name || "Employee";
 
   // =============================
   // State for Employee's Shifts Data
   // =============================
-  const [employeeData, setEmployeeData] = useState<{
-    name: string;
-    shifts: { startTime: string; endTime: string }[];
-  } | null>(null);
+  const [employeeData, setEmployeeData] = useState<Employee | null>(null);
 
   useEffect(() => {
     async function fetchEmployeeShifts() {
@@ -208,16 +206,6 @@ export default function Dashboard() {
                 >
                   Schedule Editor
                 </button>
-                <button
-                  onClick={() => setActiveSubTab("myAccount")}
-                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
-                    activeSubTab === "myAccount"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-600 hover:text-blue-500"
-                  }`}
-                >
-                  My Account
-                </button>
               </>
             )}
             {activeMainTab === "peopleSchedule" && (
@@ -289,7 +277,6 @@ export default function Dashboard() {
         <div className="p-6 w-full">
           {activeSubTab === "mySchedule" && (<MyScheduleTab employeeData={employeeData} userName={userName} localizer={localizer} />)}
           {activeSubTab === "scheduleEditor" && <ViewScheduleBuilder />}
-          {activeSubTab === "myAccount" && <div>My Account content coming soon</div>}
           {activeSubTab === "viewDay" && <ViewDayTab />}
           {activeSubTab === "viewWeek" && <ViewWeekTab />}
           {activeSubTab === "tagsSchedule" && <ViewEntitiesScheduleTab />}
