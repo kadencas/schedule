@@ -11,7 +11,7 @@ import {
   getPreviousWeekMonday,
 } from "@/app/individual-schedule-builder/helper/helper";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiSearch, FiFilter, FiGrid, FiList, FiInfo, FiUser, FiMapPin, FiBriefcase } from "react-icons/fi";
+import { FiSearch, FiFilter, FiInfo, FiX } from "react-icons/fi";
 import { Employee } from "@/types/types";
 
 export default function Page() {
@@ -21,11 +21,22 @@ export default function Page() {
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [showEmptyEmployees, setShowEmptyEmployees] = useState(false);
-  const [filterDepartment, setFilterDepartment] = useState("");
-  const [filterLocation, setFilterLocation] = useState("");
-  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
+  const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+
+  // Get unique departments for the filter
+  const uniqueDepartments = useMemo(() => {
+    if (!employees) return [];
+    
+    const departments = new Set<string>();
+    employees.forEach(employee => {
+      if (employee.department) {
+        departments.add(employee.department);
+      }
+    });
+    
+    return Array.from(departments).sort();
+  }, [employees]);
 
   const handlePreviousWeek = () => {
     setCurrentMonday(getPreviousWeekMonday(currentMonday));
@@ -37,33 +48,26 @@ export default function Page() {
 
   const formattedMondayDate = formatMondayDate(currentMonday);
 
-  // Filter and search employees
+  // Clear department filter
+  const clearDepartmentFilter = () => {
+    setDepartmentFilter(null);
+    setShowDepartmentFilter(false);
+  };
+
+  // Filter employees based on search term and department
   const filteredEmployees = useMemo(() => {
     if (!employees) return [];
     
-    return employees
-      .filter(employee => 
-        employee.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (employee.department || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (employee.location || "").toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .filter(employee => {
-        if (filterDepartment && employee.department !== filterDepartment) return false;
-        if (filterLocation && employee.location !== filterLocation) return false;
-        return showEmptyEmployees || (employee.shifts && employee.shifts.length > 0);
-      });
-  }, [employees, searchTerm, filterDepartment, filterLocation, showEmptyEmployees]);
-
-  // Get unique departments and locations for filters
-  const uniqueDepartments = useMemo(() => {
-    if (!employees) return [];
-    return [...new Set(employees.map(emp => emp.department).filter(Boolean))];
-  }, [employees]);
-  
-  const uniqueLocations = useMemo(() => {
-    if (!employees) return [];
-    return [...new Set(employees.map(emp => emp.location).filter(Boolean))];
-  }, [employees]);
+    return employees.filter(employee => {
+      const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           (employee.department || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (employee.location || "").toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
+      
+      return matchesSearch && matchesDepartment;
+    });
+  }, [employees, searchTerm, departmentFilter]);
 
   // Loading state with animation
   if (loading) {
@@ -89,15 +93,9 @@ export default function Page() {
   }
 
   return (
-    <div className="max-w-full mx-auto p-4 md:p-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-xl shadow-sm mb-4 p-4">
-        <h1 className="text-xl font-semibold text-gray-800 mb-2">Employee Schedule View</h1>
-        <p className="text-sm text-gray-500">View all employees and their scheduled activities</p>
-      </div>
-      
+    <div className="w-full mx-auto p-0.5 md:p-1">
       {/* Week Day Toggle */}
-      <div className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm mb-1 overflow-hidden">
         <WeekDayToggle
           currentMonday={currentMonday}
           formattedMondayDate={formattedMondayDate}
@@ -108,11 +106,11 @@ export default function Page() {
         />
       </div>
       
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm mb-4 p-4">
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+      {/* Search and Filter */}
+      <div className="bg-white rounded-xl shadow-sm mb-1 p-2">
+        <div className="flex items-center gap-2">
           {/* Search */}
-          <div className="relative w-full sm:w-64">
+          <div className="relative flex-grow sm:max-w-sm">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiSearch className="text-gray-400" />
             </div>
@@ -125,127 +123,97 @@ export default function Page() {
             />
           </div>
           
-          <div className="flex gap-2 items-center self-end">
-            {/* Filter button */}
-            <button
-              onClick={() => setFiltersVisible(!filtersVisible)}
-              className={`p-1.5 rounded-md border ${filtersVisible ? 'bg-blue-50 border-blue-200 text-blue-600' : 'border-gray-200 text-gray-500 hover:text-gray-700'}`}
-              title="Show filters"
+          {/* Filter button */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+              className={`p-2 rounded-md ${departmentFilter ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} flex items-center`}
+              title="Filter by department"
             >
               <FiFilter size={16} />
+              {departmentFilter && (
+                <span className="ml-1 text-xs font-medium hidden sm:inline">
+                  {departmentFilter}
+                </span>
+              )}
             </button>
             
-            {/* View mode toggle */}
-            <div className="bg-gray-100 rounded-md p-1 flex items-center">
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-1.5 rounded ${viewMode === "list" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-                title="List view"
-              >
-                <FiList size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-1.5 rounded ${viewMode === "grid" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-                title="Grid view"
-              >
-                <FiGrid size={16} />
-              </button>
-            </div>
-            
-            {/* Show empty employees toggle */}
-            <label className="flex items-center text-sm text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showEmptyEmployees}
-                onChange={() => setShowEmptyEmployees(!showEmptyEmployees)}
-                className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
-              />
-              <span className="ml-2">Show all employees</span>
-            </label>
-          </div>
-        </div>
-        
-        {/* Advanced Filters */}
-        <AnimatePresence>
-          {filtersVisible && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiBriefcase className="text-gray-400" size={14} />
-                    </div>
-                    <select
-                      value={filterDepartment}
-                      onChange={(e) => setFilterDepartment(e.target.value)}
-                      className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
-                    >
-                      <option value="">All Departments</option>
-                      {uniqueDepartments.map((dept) => (
-                        <option key={dept} value={dept}>
-                          {dept}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            {/* Filter dropdown */}
+            {showDepartmentFilter && (
+              <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 w-48 py-1">
+                <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
+                  Filter by Department
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiMapPin className="text-gray-400" size={14} />
-                    </div>
-                    <select
-                      value={filterLocation}
-                      onChange={(e) => setFilterLocation(e.target.value)}
-                      className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
-                    >
-                      <option value="">All Locations</option>
-                      {uniqueLocations.map((loc) => (
-                        <option key={loc} value={loc}>
-                          {loc}
-                        </option>
-                      ))}
-                    </select>
+                {departmentFilter && (
+                  <button 
+                    onClick={clearDepartmentFilter}
+                    className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                  >
+                    <FiX size={14} className="mr-2" />
+                    Clear Filter
+                  </button>
+                )}
+                
+                {uniqueDepartments.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">
+                    No departments available
                   </div>
-                </div>
+                ) : (
+                  uniqueDepartments.map(department => (
+                    <button
+                      key={department}
+                      onClick={() => {
+                        setDepartmentFilter(department);
+                        setShowDepartmentFilter(false);
+                      }}
+                      className={`px-3 py-2 text-sm w-full text-left hover:bg-gray-50 ${department === departmentFilter ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
+                    >
+                      {department}
+                    </button>
+                  ))
+                )}
               </div>
-            </motion.div>
+            )}
+          </div>
+          
+          {/* Active filter indicator */}
+          {departmentFilter && (
+            <div className="flex items-center text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-1">
+              <span className="mr-1">{departmentFilter}</span>
+              <button 
+                onClick={clearDepartmentFilter}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <FiX size={14} />
+              </button>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
       
       {/* Employee Timelines */}
-      <div className="bg-white rounded-xl shadow-sm p-3">
+      <div className="bg-white rounded-xl shadow-sm p-0.5 overflow-visible mb-6">
         {filteredEmployees.length === 0 ? (
           <div className="text-center py-6">
             <FiInfo size={40} className="mx-auto text-gray-300 mb-2" />
             <h3 className="text-gray-600 font-medium mb-1">No employees found</h3>
             <p className="text-sm text-gray-500">
-              {searchTerm || filterDepartment || filterLocation ? "Try different search or filter criteria" : ""}
-              {!showEmptyEmployees ? " or enable 'Show all employees' to see employees without schedules" : ""}
+              {departmentFilter ? `No ${departmentFilter} employees found.` : 'Try a different search term'}
+              {departmentFilter && ' Try clearing your filter.'}
             </p>
           </div>
         ) : (
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-2" : "space-y-2"}>
+          <div className="divide-y divide-gray-100 overflow-visible">
             <AnimatePresence>
-              {filteredEmployees.map((employee: Employee) => (
+              {filteredEmployees.map((employee: Employee, index: number) => (
                 <motion.div
                   key={`${employee.id}-${selectedDay}`}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="border-b last:border-b-0 border-gray-100 pb-2 last:pb-0"
+                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} overflow-visible mb-0`}
                 >
                   <EmployeeTimeline
                     employee={employee}

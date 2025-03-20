@@ -7,7 +7,7 @@ import WeekDayToggle from "../individual-schedule-builder/components/weekDayTogg
 import { useAllEmployeesShifts } from "../all-schedule-view-day/useAllEmployeeShifts";
 import { Shift, Employee, Entity } from "@/types/types";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiSearch, FiFilter, FiGrid, FiList, FiInfo } from "react-icons/fi";
+import { FiSearch, FiInfo, FiFilter, FiX } from "react-icons/fi";
 
 export default function EntityShiftsPage() {
   const { entities, loading: entitiesLoading, error: entitiesError } = useAllEntitiesShifts();
@@ -16,9 +16,23 @@ export default function EntityShiftsPage() {
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [showEmptyEntities, setShowEmptyEntities] = useState(false);
-
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [showTypeFilter, setShowTypeFilter] = useState(false);
+  
+  // Get all unique entity types for the filter
+  const entityTypes = useMemo(() => {
+    if (!entities) return [];
+    
+    const types = new Set<string>();
+    entities.forEach(entity => {
+      if (entity.type) {
+        types.add(entity.type);
+      }
+    });
+    
+    return Array.from(types).sort();
+  }, [entities]);
+  
   // Process all shifts from all employees into a flat array
   const allUserShifts = useMemo(() => {
     if (!employees || employees.length === 0) return [];
@@ -62,17 +76,25 @@ export default function EntityShiftsPage() {
   const isLoading = entitiesLoading || employeesLoading;
   const error = entitiesError || employeesError;
 
-  // Filter entities based on search term and whether they have shifts
+  // Clear type filter
+  const clearTypeFilter = () => {
+    setTypeFilter(null);
+    setShowTypeFilter(false);
+  };
+
+  // Filter entities based on search term and type
   const filteredEntities = useMemo(() => {
     if (!entities) return [];
     
-    return entities
-      .filter(entity => 
-        entity.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (entity.description || "").toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .filter(entity => showEmptyEntities || entity.entity_shifts.length > 0);
-  }, [entities, searchTerm, showEmptyEntities]);
+    return entities.filter(entity => {
+      const matchesSearch = entity.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           (entity.description || "").toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesType = !typeFilter || entity.type === typeFilter;
+      
+      return matchesSearch && matchesType;
+    });
+  }, [entities, searchTerm, typeFilter]);
 
   // Loading state with animation
   if (isLoading) {
@@ -98,15 +120,9 @@ export default function EntityShiftsPage() {
   }
 
   return (
-    <div className="max-w-full mx-auto p-4 md:p-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-xl shadow-sm mb-4 p-4">
-        <h1 className="text-xl font-semibold text-gray-800 mb-2">Entity Schedule View</h1>
-        <p className="text-sm text-gray-500">View all entities and their scheduled activities</p>
-      </div>
-      
+    <div className="w-full mx-auto p-0.5 md:p-1">
       {/* Week Day Toggle */}
-      <div className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm mb-1 overflow-hidden">
         <WeekDayToggle
           currentMonday={currentMonday}
           formattedMondayDate={formattedMondayDate}
@@ -117,11 +133,11 @@ export default function EntityShiftsPage() {
         />
       </div>
       
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm mb-4 p-4">
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+      {/* Search and Filter */}
+      <div className="bg-white rounded-xl shadow-sm mb-1 p-2">
+        <div className="flex items-center gap-2">
           {/* Search */}
-          <div className="relative w-full sm:w-64">
+          <div className="relative flex-grow sm:max-w-sm">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiSearch className="text-gray-400" />
             </div>
@@ -134,61 +150,97 @@ export default function EntityShiftsPage() {
             />
           </div>
           
-          <div className="flex gap-2 items-center self-end">
-            {/* View mode toggle */}
-            <div className="bg-gray-100 rounded-md p-1 flex items-center">
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-1.5 rounded ${viewMode === "list" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-                title="List view"
+          {/* Filter button */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowTypeFilter(!showTypeFilter)}
+              className={`p-2 rounded-md ${typeFilter ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} flex items-center`}
+              title="Filter by type"
+            >
+              <FiFilter size={16} />
+              {typeFilter && (
+                <span className="ml-1 text-xs font-medium hidden sm:inline">
+                  {typeFilter}
+                </span>
+              )}
+            </button>
+            
+            {/* Filter dropdown */}
+            {showTypeFilter && (
+              <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 w-48 py-1">
+                <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
+                  Filter by Type
+                </div>
+                
+                {typeFilter && (
+                  <button 
+                    onClick={clearTypeFilter}
+                    className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                  >
+                    <FiX size={14} className="mr-2" />
+                    Clear Filter
+                  </button>
+                )}
+                
+                {entityTypes.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-gray-500">
+                    No types available
+                  </div>
+                ) : (
+                  entityTypes.map(type => (
+                    <button
+                      key={type}
+                      onClick={() => {
+                        setTypeFilter(type);
+                        setShowTypeFilter(false);
+                      }}
+                      className={`px-3 py-2 text-sm w-full text-left hover:bg-gray-50 ${type === typeFilter ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
+                    >
+                      {type}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* Active filter indicator */}
+          {typeFilter && (
+            <div className="flex items-center text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-1">
+              <span className="mr-1">{typeFilter}</span>
+              <button 
+                onClick={clearTypeFilter}
+                className="text-blue-500 hover:text-blue-700"
               >
-                <FiList size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-1.5 rounded ${viewMode === "grid" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-                title="Grid view"
-              >
-                <FiGrid size={16} />
+                <FiX size={14} />
               </button>
             </div>
-            
-            {/* Show empty entities toggle */}
-            <label className="flex items-center text-sm text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showEmptyEntities}
-                onChange={() => setShowEmptyEntities(!showEmptyEntities)}
-                className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
-              />
-              <span className="ml-2">Show all entities</span>
-            </label>
-          </div>
+          )}
         </div>
       </div>
       
       {/* Entity Timelines */}
-      <div className="bg-white rounded-xl shadow-sm p-3">
+      <div className="bg-white rounded-xl shadow-sm p-0.5 overflow-visible mb-6">
         {filteredEntities.length === 0 ? (
           <div className="text-center py-6">
             <FiInfo size={40} className="mx-auto text-gray-300 mb-2" />
             <h3 className="text-gray-600 font-medium mb-1">No entities found</h3>
             <p className="text-sm text-gray-500">
-              {searchTerm ? "Try a different search term or " : ""}
-              {!showEmptyEntities ? "enable 'Show all entities' to see entities without schedules" : "create some entities first"}
+              {typeFilter ? `No ${typeFilter} entities found.` : 'Try a different search term'}
+              {typeFilter && ' Try clearing your filter.'}
             </p>
           </div>
         ) : (
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-2" : "space-y-2"}>
+          <div className="divide-y divide-gray-100 overflow-visible">
             <AnimatePresence>
-              {filteredEntities.map((entity: Entity) => (
+              {filteredEntities.map((entity: Entity, index: number) => (
                 <motion.div
                   key={`${entity.id}-${selectedDay}`}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="border-b last:border-b-0 border-gray-100 pb-2 last:pb-0"
+                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} overflow-visible mb-0`}
                 >
                   <EntityTimeline
                     userShifts={allUserShifts}
