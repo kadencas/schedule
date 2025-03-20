@@ -38,7 +38,8 @@ interface SegmentBoxProps {
   className?: string;
   shiftStartTime?: Date;
   minutesPerPixel?: number;
-  user: string,
+  user: string;
+  style?: React.CSSProperties;
 }
 
 const SNAP_PX = 25;
@@ -57,6 +58,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   minutesPerPixel,
   readOnly,
   user = "",
+  style,
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null!);
   const editButtonRef = useRef<HTMLButtonElement>(null);
@@ -184,7 +186,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
       cancel=".react-resizable-handle"
       disabled={readOnly}
     >
-      <div ref={nodeRef} className={`${className} absolute top-0 h-10`}>
+      <div ref={nodeRef} className={`${className} absolute top-0 h-10`} style={style}>
         <ResizableBox
           width={widthPx}
           height={64}

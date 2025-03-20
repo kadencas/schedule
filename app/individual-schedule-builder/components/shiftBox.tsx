@@ -29,9 +29,31 @@ interface ShiftBoxProps {
   recurrenceRule: string;
   user: string,
   onSaveShiftChanges?: (shiftId: string, updatedData: Partial<Shift>) => void;
+  height?: number;
+  onHeightChange?: (shiftId: string, newHeight: number) => void;
+}
+
+interface ShiftUpdatePayload {
+  shiftId: string;
+  startTime: string;
+  endTime: string;
+  isRecurring: boolean;
+  recurrenceRule: string;
+  segments: {
+    id: string;
+    startTime: string;
+    endTime: string;
+    segmentType: string;
+    location: string;
+    notes: string;
+    color: string;
+    entities: any;
+    entityId: any;
+  }[];
 }
 
 const SHIFT_HEIGHT = 100;
+const SEGMENT_HEIGHT = 70;
 const MINUTES_PER_PIXEL = 0.6; // 1px equals 0.6 minutes
 
 const ShiftBox: React.FC<ShiftBoxProps> = ({
@@ -48,12 +70,15 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
   user,
   readOnly = false,
   onSaveShiftChanges,
+  height = SHIFT_HEIGHT,
+  onHeightChange,
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null!);
   const [width, setWidth] = useState(initialWidth);
   const [position, setPosition] = useState({ x: initialX, y: 0 });
   const [localSegments, setLocalSegments] = useState<Segment[]>(segments);
-
+  const [segmentRows, setSegmentRows] = useState(1);
+  const [segmentYPositions, setSegmentYPositions] = useState<Record<string, number>>({});
 
   // Dirty flag for unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
@@ -171,9 +196,9 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
     }
   };
 
-  const handleSave = async () => {
-    console.log("local segs to save", localSegments)
-    const payload = {
+  const handleSaveChanges = async () => {
+    console.log("local segs to save", localSegments);
+    const payload: ShiftUpdatePayload = {
       shiftId,
       startTime: dynamicStartTime.toISOString(),
       endTime: dynamicEndTime.toISOString(),
@@ -184,7 +209,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
         startTime: new Date(dynamicStartTime.getTime() + seg.start * 60000).toISOString(),
         endTime: new Date(dynamicStartTime.getTime() + seg.end * 60000).toISOString(),
         segmentType: seg.label || " ",
-        location: seg.location,
+        location: seg.location || "default",
         notes: "",
         color: seg.color,
         entities: seg.entity || null,
@@ -192,7 +217,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       })),
     };
 
-    console.log("payload", payload)
+    console.log("payload", payload);
 
     try {
       const response = await fetch("/api/updateshiftwithsegments", {
@@ -201,12 +226,16 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
         body: JSON.stringify(payload),
       });
       const data = await response.json();
-      // Reset the dirty flag after a successful save
+      console.log("API response:", data);
+
+
+    
 
       if (onSaveShiftChanges) {
         onSaveShiftChanges(shiftId, payload);
       }
 
+      // Update local state with the processed segments
       setHasChanges(false);
     } catch (error) {
       console.error("Error saving shift:", error);
@@ -229,6 +258,61 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
     };
   }
 
+  // Function to calculate segment layout and required height
+  const calculateSegmentLayout = () => {
+    if (localSegments.length === 0) return { rows: 1, segmentPositions: {} };
+
+    // Sort segments by start time
+    const sortedSegments = [...localSegments].sort((a, b) => a.start - b.start);
+    
+    // Track which row each segment should be placed in
+    const segmentPositions: Record<string, number> = {};
+    
+    // Keep track of the end position of the last segment in each row
+    const rowEndPositions: number[] = [];
+    
+    // Assign each segment to a row
+    sortedSegments.forEach(segment => {
+      // Find the first row where this segment doesn't overlap
+      let rowIndex = 0;
+      while (rowIndex < rowEndPositions.length) {
+        if (segment.start >= rowEndPositions[rowIndex]) {
+          // This row has space for the segment
+          break;
+        }
+        rowIndex++;
+      }
+      
+      // Place segment in this row
+      segmentPositions[segment.id] = rowIndex;
+      
+      // Update the end position for this row
+      rowEndPositions[rowIndex] = segment.end;
+    });
+    
+    // Calculate required height based on number of rows
+    const rows = Math.max(1, rowEndPositions.length);
+    
+    return { rows, segmentPositions };
+  };
+
+  // Update segment layout whenever segments change
+  useEffect(() => {
+    const { rows, segmentPositions } = calculateSegmentLayout();
+    setSegmentRows(rows);
+    setSegmentYPositions(segmentPositions);
+  }, [localSegments]);
+
+  // Calculate dynamic height based on number of rows
+  const dynamicHeight = 30 + (segmentRows * SEGMENT_HEIGHT);
+
+  // Notify parent of height changes
+  useEffect(() => {
+    if (onHeightChange && dynamicHeight !== height) {
+      onHeightChange(shiftId, dynamicHeight);
+    }
+  }, [dynamicHeight, shiftId, onHeightChange, height]);
+
   return (
     <Draggable
       nodeRef={nodeRef}
@@ -239,16 +323,16 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       onStop={!readOnly ? handleDrag : undefined}
       handle=".shift-drag-handle"
       cancel=".react-resizable-handle, .segment-container"
-      disabled={readOnly} // disables dragging when readOnly is true
+      disabled={readOnly}
     >
-      <div ref={nodeRef} className="absolute h-[100px]" style={{ width }}>
+      <div ref={nodeRef} className="absolute" style={{ width }}>
         <ResizableBox
           width={width}
-          height={SHIFT_HEIGHT}
+          height={dynamicHeight}
           axis="x"
-          resizeHandles={readOnly ? [] : ["e"]} // no handles if readOnly
-          minConstraints={[150, SHIFT_HEIGHT]}
-          maxConstraints={[1000, SHIFT_HEIGHT]}
+          resizeHandles={readOnly ? [] : ["e"]}
+          minConstraints={[150, dynamicHeight]}
+          maxConstraints={[1000, dynamicHeight]}
           onResize={!readOnly ? handleResize : undefined}
           onResizeStop={!readOnly ? handleResizeStop : undefined}
         >
@@ -256,7 +340,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
           <div className="w-full h-full bg-gray-300 bg-opacity-60 rounded-md overflow-hidden relative">
             {hasChanges && (
               <button
-                onClick={handleSave}
+                onClick={handleSaveChanges}
                 className="absolute top-1 right-1 bg-green-500 text-white px-2 py-1 rounded text-xs flex"
               >
                 <FaCheck size={16} className="mr-1" />
@@ -333,7 +417,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                 </div>
               )}
             </div>
-            <div className="relative h-[70px]">
+            <div className="relative" style={{ height: dynamicHeight - 30 }}>
               {localSegments.map((seg) => (
                 <SegmentBox
                   key={seg.id}
@@ -350,6 +434,9 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                   entities={entities}
                   onEntityUpdate={handleEntityUpdate}
                   user={(seg as any).user || user}
+                  style={{
+                    top: `${segmentYPositions[seg.id] * SEGMENT_HEIGHT}px`
+                  }}
                 />
               ))}
               <button

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ShiftBox from "./shiftBox";
 import { useContainerWidth } from "../hooks/useContainerWidth";
 import styles from "../styles/Timeline.module.css";
@@ -37,12 +37,28 @@ export default function Timeline({
 }: TimelineProps) {
   const { containerRef, width: containerWidth } = useContainerWidth();
   const numTicks = Math.floor(containerWidth / 25) + 1;
+  const [shiftHeights, setShiftHeights] = useState<Record<string, number>>({});
+
+  // Update container height based on the tallest shift
+  const containerHeight = Math.max(gridHeight, ...Object.values(shiftHeights));
+
+  const handleShiftHeightChange = (shiftId: string, newHeight: number) => {
+    setShiftHeights(prev => {
+      if (prev[shiftId] === newHeight) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [shiftId]: newHeight
+      };
+    });
+  };
 
   return (
     <div
       ref={containerRef}
       className={styles.timelineContainer}
-      style={{ height: gridHeight }} // gridHeight is dynamic
+      style={{ height: containerHeight }}
     >
       {Array.from({ length: numTicks }).map((_, i) => {
         const leftPos = i * 25;
@@ -63,12 +79,12 @@ export default function Timeline({
               className={
                 i % 4 === 0 ? styles.gridLineMajor : styles.gridLineMinor
               }
-              style={{ left: leftPos }} // left is dynamic
+              style={{ left: leftPos }}
             />
             {hourLabel !== null && (
               <span
                 className={styles.hourLabel}
-                style={{ left: leftPos }} // left is dynamic
+                style={{ left: leftPos }}
               >
                 {hourLabel}
               </span>
@@ -90,9 +106,10 @@ export default function Timeline({
             readOnly={readOnly}
             user={user}
             onSaveShiftChanges={onShiftSave}
-            entities={entities}
+            entities={entities || []}
             isRecurring={matchingShift.isRecurring}
             recurrenceRule={matchingShift.recurrenceRule}
+            onHeightChange={handleShiftHeightChange}
           />
         </div>
       )}
