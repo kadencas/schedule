@@ -41,7 +41,7 @@ export default function EntitiesPage() {
   // New Entity form states
   const [isFormOpen, setIsFormOpen] = useState(false); // tracks collapse/expand
   const [name, setName] = useState("");
-  const [type, setType] = useState("LOCATION");
+  const [type, setType] = useState("STATION");
   const [icon, setIcon] = useState<AllowedIcon | "">("");
   const [color, setColor] = useState("");
   const [requiresCoverage, setRequiresCoverage] = useState(false);
@@ -119,7 +119,7 @@ export default function EntitiesPage() {
 
       // Reset the form
       setName("");
-      setType("LOCATION");
+      setType("STATION");
       setIcon("");
       setColor("");
       setRequiresCoverage(false);
@@ -271,7 +271,7 @@ export default function EntitiesPage() {
                 onChange={(e) => setType(e.target.value)}
                 required
               >
-                <option value="LOCATION">LOCATION</option>
+                <option value="STATION">STATION</option>
                 <option value="TASK">TASK</option>
               </select>
             </div>

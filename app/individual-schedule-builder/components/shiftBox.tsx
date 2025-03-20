@@ -5,10 +5,9 @@ import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
 import SegmentBox from "./segmentBox";
 import { FaCheck, FaPlus, FaUser } from "react-icons/fa";
-import { MdDragHandle } from "react-icons/md";
+import { MdDragIndicator } from "react-icons/md";
 import { v4 as uuidv4 } from 'uuid';
 import { Entity, Segment, Shift } from "@/types/types";
-import { FaRepeat } from "react-icons/fa6";
 import ShiftBoxMenu from "./shiftBoxMenu";
 import ReactDOM from "react-dom";
 import { TbRepeat, TbRepeatOff } from "react-icons/tb";
@@ -93,8 +92,6 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
     // Use an empty string or null as per backend expectations
     setLocalRecurrenceRule(newRule || "");
   };
-
-
 
   const handleLabelUpdate = (id: string, newLabel: string) => {
     setLocalSegments((prev) =>
@@ -228,9 +225,6 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
       const data = await response.json();
       console.log("API response:", data);
 
-
-    
-
       if (onSaveShiftChanges) {
         onSaveShiftChanges(shiftId, payload);
       }
@@ -308,10 +302,15 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
 
   // Notify parent of height changes
   useEffect(() => {
-    if (onHeightChange && dynamicHeight !== height) {
+    if (onHeightChange) {
       onHeightChange(shiftId, dynamicHeight);
     }
-  }, [dynamicHeight, shiftId, onHeightChange, height]);
+  }, [dynamicHeight, shiftId, onHeightChange]);
+
+  // Format the time in a more readable way
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
 
   return (
     <Draggable
@@ -337,43 +336,26 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
           onResizeStop={!readOnly ? handleResizeStop : undefined}
         >
           {/* SHIFT container */}
-          <div className="w-full h-full bg-gray-300 bg-opacity-60 rounded-md overflow-hidden relative">
-            {hasChanges && (
-              <button
-                onClick={handleSaveChanges}
-                className="absolute top-1 right-1 bg-green-500 text-white px-2 py-1 rounded text-xs flex"
-              >
-                <FaCheck size={16} className="mr-1" />
-                Save
-              </button>
-            )}
-            <div className="shift-drag-handle h-[30px] bg-gray-700 flex items-center px-2 cursor-move">
-              <span><FaUser size={16} className="mr-2 text-white" /></span>
-
-              <div className="relative">
-                <span className="block text-white text-md">
-                  {dynamicStartTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{" "}
-                  -{" "}
-                  {dynamicEndTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          <div className="w-full h-full bg-white/70 backdrop-blur-sm rounded-lg shadow-md overflow-hidden relative border border-gray-200">
+            {/* Header section */}
+            <div className="shift-drag-handle h-[30px] bg-gradient-to-r from-blue-600 to-blue-500 flex items-center px-3 cursor-move relative">
+              <div className="flex items-center flex-1">
+                <span className="text-white"><FaUser size={12} className="mr-2" /></span>
+                <span className="text-white text-sm font-medium">
+                  {formatTime(dynamicStartTime)} - {formatTime(dynamicEndTime)}
                 </span>
-
-                <span ref={repeatIconRef} style={{ position: "absolute", top: 0, right: -15 }}>
+                
+                <span ref={repeatIconRef} className="ml-2">
                   {localIsRecurring ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsRecurrenceMenuOpen(true);
                       }}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        padding: 0,
-                        cursor: "pointer",
-                        pointerEvents: "auto",
-                      }}
+                      className="bg-blue-700 hover:bg-blue-800 rounded-full p-1 transition-colors duration-200 focus:outline-none"
                       title={`Repeats: ${getHumanReadableRRule(localRecurrenceRule)}`}
                     >
-                      <TbRepeat style={{ color: "#2bff00", fontSize: "1rem",  transform: "translateX(2px) translateY(-2px)",}} />
+                      <TbRepeat className="text-white" size={12} />
                     </button>
                   ) : (
                     <button
@@ -381,43 +363,34 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                         e.stopPropagation();
                         setIsRecurrenceMenuOpen(true);
                       }}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        padding: 0,
-                        cursor: "pointer",
-                      }}
+                      className="bg-gray-400 hover:bg-gray-500 rounded-full p-1 transition-colors duration-200 focus:outline-none"
                     >
-                      <TbRepeatOff
-                        style={{
-                          color: "grey",
-                          fontSize: "1rem",
-                          transform: "translateX(2px) translateY(-2px)", // shifts the icon right by 2px
-                        }}
-                      />
+                      <TbRepeatOff className="text-white" size={12} />
                     </button>
                   )}
                 </span>
-
-                {!readOnly && isRecurrenceMenuOpen && ReactDOM.createPortal(
-                  <ShiftBoxMenu
-                    isRecurring={localIsRecurring}
-                    recurrenceRule={localRecurrenceRule}
-                    onRecurrenceChange={handleRecurrenceChange}
-                    onClose={() => setIsRecurrenceMenuOpen(false)}
-                    style={menuStyle}
-                  />,
-                  document.body
+                
+                {!readOnly && (
+                  <div className="absolute right-3 flex gap-1">
+                    <MdDragIndicator className="text-white/60" size={16} />
+                  </div>
                 )}
               </div>
 
-              {!readOnly && (
-                <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
-                  <MdDragHandle size={15} />
-                </div>
+              {!readOnly && isRecurrenceMenuOpen && ReactDOM.createPortal(
+                <ShiftBoxMenu
+                  isRecurring={localIsRecurring}
+                  recurrenceRule={localRecurrenceRule}
+                  onRecurrenceChange={handleRecurrenceChange}
+                  onClose={() => setIsRecurrenceMenuOpen(false)}
+                  style={menuStyle}
+                />,
+                document.body
               )}
             </div>
-            <div className="relative" style={{ height: dynamicHeight - 30 }}>
+
+            {/* Segments container */}
+            <div className="relative pt-1 px-1" style={{ height: dynamicHeight - 30 }}>
               {localSegments.map((seg) => (
                 <SegmentBox
                   key={seg.id}
@@ -439,21 +412,34 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                   }}
                 />
               ))}
-              <button
-                onClick={handleAddSegment}
-                style={{
-                  position: "absolute",
-                  left: `${maxSegmentEndPx + 10}px`,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                }}
-                className="text-grey rounded-full p-1"
-              >
-                {!readOnly && (
-                  <FaPlus size={12} />
-                )}
-              </button>
+              
+              {!readOnly && (
+                <button
+                  onClick={handleAddSegment}
+                  style={{
+                    position: "absolute",
+                    left: `${maxSegmentEndPx + 10}px`,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1.5 shadow-sm transition-colors duration-200 focus:outline-none"
+                  title="Add segment"
+                >
+                  <FaPlus size={10} />
+                </button>
+              )}
             </div>
+
+            {/* Save button */}
+            {hasChanges && (
+              <button
+                onClick={handleSaveChanges}
+                className="absolute top-[40px] right-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-xs font-medium flex items-center shadow-sm transition-colors duration-200"
+              >
+                <FaCheck size={12} className="mr-1" />
+                Save
+              </button>
+            )}
           </div>
         </ResizableBox>
       </div>

@@ -28,9 +28,8 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<"mySchedule" | "viewDay" | "viewWeek" | "people" | "scheduleEditor" | "viewEntities" | "viewEntitiesSchedule">(
-    "mySchedule"
-  );
+  const [activeMainTab, setActiveMainTab] = useState<"me" | "peopleSchedule" | "tagSchedule" | "management">("me");
+  const [activeSubTab, setActiveSubTab] = useState<"mySchedule" | "scheduleEditor" | "myAccount" | "viewDay" | "viewWeek" | "tagsSchedule" | "people" | "tags">("mySchedule");
   const { data: session, status } = useSession();
   const userName = session?.user?.name || "Employee";
 
@@ -79,6 +78,24 @@ export default function Dashboard() {
     fetchCompanyName();
   }, []);
 
+  // Update sub-tab when main tab changes
+  useEffect(() => {
+    switch (activeMainTab) {
+      case "me":
+        setActiveSubTab("mySchedule");
+        break;
+      case "peopleSchedule":
+        setActiveSubTab("viewDay");
+        break;
+      case "tagSchedule":
+        setActiveSubTab("tagsSchedule");
+        break;
+      case "management":
+        setActiveSubTab("people");
+        break;
+    }
+  }, [activeMainTab]);
+
   if (status === "loading") {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -91,112 +108,194 @@ export default function Dashboard() {
   // Render
   // =============================
   return (
-    <div className="relative bg-[#F9F7F4] min-h-screen overflow-hidden">
+    <div className="relative bg-[#F9F7F4] min-h-screen">
       <motion.div
-        className="absolute w-64 h-64 bg-blue-200 rounded-full filter blur-3xl"
+        className="absolute w-64 h-64 bg-blue-200 rounded-full filter blur-3xl opacity-50"
         style={{ top: "-100px", left: "-100px" }}
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute w-48 h-48 bg-green-200 rounded-full filter blur-3xl"
+        className="absolute w-48 h-48 bg-green-200 rounded-full filter blur-3xl opacity-50"
         style={{ bottom: "-50px", right: "-50px" }}
         animate={{ scale: [1, 1.1, 1] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="fixed top-4 right-4 z-20">
-        <button
-          onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
-          className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-        >
-          Sign Out
-        </button>
+      {/* Top navigation bar */}
+      <div className="sticky top-0 z-30 w-full bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="max-w-[1600px] mx-auto px-4 flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <h1 className="text-xl font-bold text-gray-800 mr-8">
+              {companyName || "Loading Company..."}
+            </h1>
+            
+            {/* Main Tab Categories */}
+            <nav className="flex space-x-1">
+              <button
+                onClick={() => setActiveMainTab("me")}
+                className={`px-4 py-2 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                  activeMainTab === "me"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Me
+              </button>
+              <button
+                onClick={() => setActiveMainTab("peopleSchedule")}
+                className={`px-4 py-2 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                  activeMainTab === "peopleSchedule"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                View People's Schedule
+              </button>
+              <button
+                onClick={() => setActiveMainTab("tagSchedule")}
+                className={`px-4 py-2 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                  activeMainTab === "tagSchedule"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                View Tag's Schedule
+              </button>
+              <button
+                onClick={() => setActiveMainTab("management")}
+                className={`px-4 py-2 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                  activeMainTab === "management"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                People & Tags
+              </button>
+            </nav>
+          </div>
+          
+          <button
+            onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
+            className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
+        
+        {/* Sub-tabs */}
+        <div className="max-w-[1600px] mx-auto px-4 border-t border-gray-100">
+          <div className="flex space-x-1 h-12">
+            {activeMainTab === "me" && (
+              <>
+                <button
+                  onClick={() => setActiveSubTab("mySchedule")}
+                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                    activeSubTab === "mySchedule"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-blue-500"
+                  }`}
+                >
+                  My Schedule
+                </button>
+                <button
+                  onClick={() => setActiveSubTab("scheduleEditor")}
+                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                    activeSubTab === "scheduleEditor"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-blue-500"
+                  }`}
+                >
+                  Schedule Editor
+                </button>
+                <button
+                  onClick={() => setActiveSubTab("myAccount")}
+                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                    activeSubTab === "myAccount"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-blue-500"
+                  }`}
+                >
+                  My Account
+                </button>
+              </>
+            )}
+            {activeMainTab === "peopleSchedule" && (
+              <>
+                <button
+                  onClick={() => setActiveSubTab("viewDay")}
+                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                    activeSubTab === "viewDay"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-blue-500"
+                  }`}
+                >
+                  Daily View
+                </button>
+                <button
+                  onClick={() => setActiveSubTab("viewWeek")}
+                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                    activeSubTab === "viewWeek"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-blue-500"
+                  }`}
+                >
+                  Weekly View
+                </button>
+              </>
+            )}
+            {activeMainTab === "tagSchedule" && (
+              <button
+                onClick={() => setActiveSubTab("tagsSchedule")}
+                className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                  activeSubTab === "tagsSchedule"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-600 hover:text-blue-500"
+                }`}
+              >
+                Tags Schedule
+              </button>
+            )}
+            {activeMainTab === "management" && (
+              <>
+                <button
+                  onClick={() => setActiveSubTab("people")}
+                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                    activeSubTab === "people"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-blue-500"
+                  }`}
+                >
+                  People
+                </button>
+                <button
+                  onClick={() => setActiveSubTab("tags")}
+                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
+                    activeSubTab === "tags"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-blue-500"
+                  }`}
+                >
+                  Tags
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      <main className="flex flex-col items-center justify-start p-6 z-10 relative">
-        {/* Company Name Display */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-800">
-            {companyName || "Loading Company..."}
-          </h1>
-        </div>
-
-        {/* Tab Buttons */}
-        <div className="flex space-x-4 mb-8">
-          <button
-            onClick={() => setActiveTab("mySchedule")}
-            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "mySchedule"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-          >
-            My Schedule
-          </button>
-          <button
-            onClick={() => setActiveTab("viewDay")}
-            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "viewDay"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-          >
-            View Employees Day
-          </button>
-          <button
-            onClick={() => setActiveTab("viewWeek")}
-            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "viewWeek"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-          >
-            View Week
-          </button>
-          <button
-            onClick={() => setActiveTab("people")}
-            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "people"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-          >
-            People
-          </button>
-          <button
-            onClick={() => setActiveTab("scheduleEditor")}
-            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "scheduleEditor"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-          >
-            Schedule Editor
-          </button>
-          <button
-            onClick={() => setActiveTab("viewEntities")}
-            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "viewEntities"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-          >
-            Tags
-          </button>
-          <button
-            onClick={() => setActiveTab("viewEntitiesSchedule")}
-            className={`px-4 py-2 rounded-2xl font-semibold focus:outline-none transition-colors ${activeTab === "viewEntitiesSchedule"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-          >
-            View Tags Schedule
-          </button>
-        </div>
-
+      <main className="max-w-[1600px] mx-auto p-6 z-10 relative">
         {/* Tab Content */}
-        {activeTab === "mySchedule" && (<MyScheduleTab employeeData={employeeData} userName={userName} localizer={localizer} />)}
-        {activeTab === "viewDay" && <ViewDayTab />}
-        {activeTab === "viewWeek" && <ViewWeekTab />}
-        {activeTab === "people" && <ViewPeopleTab />}
-        {activeTab === "scheduleEditor" && <ViewScheduleBuilder />}
-        {activeTab === "viewEntities" && <ViewEntitiesTab />}
-        {activeTab === "viewEntitiesSchedule" && <ViewEntitiesScheduleTab />}
+        <div className="p-6 w-full">
+          {activeSubTab === "mySchedule" && (<MyScheduleTab employeeData={employeeData} userName={userName} localizer={localizer} />)}
+          {activeSubTab === "scheduleEditor" && <ViewScheduleBuilder />}
+          {activeSubTab === "myAccount" && <div>My Account content coming soon</div>}
+          {activeSubTab === "viewDay" && <ViewDayTab />}
+          {activeSubTab === "viewWeek" && <ViewWeekTab />}
+          {activeSubTab === "tagsSchedule" && <ViewEntitiesScheduleTab />}
+          {activeSubTab === "people" && <ViewPeopleTab />}
+          {activeSubTab === "tags" && <ViewEntitiesTab />}
+        </div>
       </main>
     </div>
   );

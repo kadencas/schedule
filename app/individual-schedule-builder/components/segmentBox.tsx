@@ -4,16 +4,17 @@ import ReactDOM from "react-dom";
 import Draggable, { DraggableEvent, DraggableData } from "react-draggable";
 import { ResizableBox } from "react-resizable";
 import "react-resizable/css/styles.css";
-import { FaCheck, FaPencilAlt, FaTimes, FaUser } from "react-icons/fa";
-import { MdDelete, MdDragHandle, MdToys } from "react-icons/md";
+import { FaEdit, FaUser } from "react-icons/fa";
+import { MdDragIndicator, MdToys } from "react-icons/md";
 import { Entity, Segment } from "@/types/types";
 import { LuBookOpen, LuClock, LuLampDesk } from "react-icons/lu";
 import { TbBeach } from "react-icons/tb";
 import { PiBooksFill } from "react-icons/pi";
 import SegmentEditorMenu from "./segmentMenu"; // Import the new component
 import { BiSortZA } from "react-icons/bi";
+import { IconType } from "react-icons";
 
-const iconMap = {
+const iconMap: Record<string, IconType> = {
   LuLampDesk: LuLampDesk,
   LuBookOpen: LuBookOpen,
   LuClock: LuClock,
@@ -22,8 +23,6 @@ const iconMap = {
   BiSortZA: BiSortZA,
   MdToys: MdToys,
 };
-
-
 
 interface SegmentBoxProps {
   segment: Segment;
@@ -81,8 +80,9 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   ];
 
   useEffect(() => {
-    setLeftPx(segment.start / 0.6);
-    setWidthPx((segment.end - segment.start) / 0.6);
+    // Adjust position calculation for perfect alignment with timeline
+    setLeftPx(Math.round(segment.start / 0.6));
+    setWidthPx(Math.round((segment.end - segment.start) / 0.6));
     setLocalLabel(segment.label);
   }, [segment.start, segment.end, segment.label]);
 
@@ -97,13 +97,14 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
       newX = Math.round(newX / SNAP_PX) * SNAP_PX;
     }
     setLeftPx(newX);
-    onUpdate(segment.id, newX * 0.6, (newX + widthPx) * 0.6);
+    // Only update the x-coordinate position, preserving the y position (gap)
+    onUpdate(segment.id, Math.round(newX * 0.6), Math.round((newX + widthPx) * 0.6));
   };
 
   // RESIZE: update width during drag (and convert when notifying parent)
   const handleResize = (_: React.SyntheticEvent, data: { size: { width: number } }) => {
     setWidthPx(data.size.width);
-    onUpdate(segment.id, leftPx * 0.6, (leftPx + data.size.width) * 0.6);
+    onUpdate(segment.id, Math.round(leftPx * 0.6), Math.round((leftPx + data.size.width) * 0.6));
   };
 
   // RESIZE STOP: snap width and update parent state in minutes
@@ -113,7 +114,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
       newWidth = Math.round(newWidth / SNAP_PX) * SNAP_PX;
     }
     setWidthPx(newWidth);
-    onUpdate(segment.id, leftPx * 0.6, (leftPx + newWidth) * 0.6);
+    onUpdate(segment.id, Math.round(leftPx * 0.6), Math.round((leftPx + newWidth) * 0.6));
   };
 
   // Toggle the editor for the segment name and color.
@@ -173,23 +174,52 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   }
 
 
-  const EntityIcon = localEntity?.icon ? iconMap[localEntity.icon] : null;
+  const EntityIcon = localEntity?.icon && iconMap[localEntity.icon] ? iconMap[localEntity.icon] : null;
   const segmentDuration = minutesPerPixel ? widthPx * minutesPerPixel : 0;
+
+  // Create a lighter version of the color for the background
+  const getBackgroundColor = () => {
+    if (!localColor || localColor === '#ffffff' || localColor === 'white') {
+      return 'rgba(255, 255, 255, 0.85)';
+    }
+    
+    // Extract RGB from hex color
+    const r = parseInt(localColor.substring(1, 3), 16);
+    const g = parseInt(localColor.substring(3, 5), 16);
+    const b = parseInt(localColor.substring(5, 7), 16);
+    
+    // Return a semi-transparent version with reduced opacity
+    return `rgba(${r}, ${g}, ${b}, 0.85)`;
+  };
+
+  // Create a darker version of the color for the border
+  const getBorderColor = () => {
+    if (!localColor || localColor === '#ffffff' || localColor === 'white') {
+      return '#e2e8f0'; // light gray border for white segments
+    }
+    
+    // Extract RGB from hex color and make it darker
+    const r = Math.max(0, parseInt(localColor.substring(1, 3), 16) - 40);
+    const g = Math.max(0, parseInt(localColor.substring(3, 5), 16) - 40);
+    const b = Math.max(0, parseInt(localColor.substring(5, 7), 16) - 40);
+    
+    return `rgb(${r}, ${g}, ${b})`;
+  };
 
   return (
     <Draggable
       nodeRef={nodeRef}
       axis="x"
-      position={{ x: leftPx, y: 3 }}
+      position={{ x: leftPx, y: 4 }}
       bounds="parent"
       onDrag={!readOnly ? handleDrag : undefined}
       cancel=".react-resizable-handle"
       disabled={readOnly}
     >
-      <div ref={nodeRef} className={`${className} absolute top-0 h-10`} style={style}>
+      <div ref={nodeRef} className={`${className} absolute h-full`} style={style}>
         <ResizableBox
           width={widthPx}
-          height={64}
+          height={60}
           axis="x"
           resizeHandles={readOnly ? [] : ["e"]}
           minConstraints={[30, 40]}
@@ -198,39 +228,80 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
           handleSize={[8, 8]}
         >
           <div
-            className="w-full h-full rounded shadow-lg flex items-center justify-center text-sm text-black relative cursor-move"
-            style={{ backgroundColor: localColor }}
+            className="w-full h-full rounded-md shadow-sm border backdrop-blur-[2px] flex flex-col justify-between p-1 relative cursor-move transition-all duration-200"
+            style={{ 
+              backgroundColor: getBackgroundColor(),
+              borderColor: getBorderColor(),
+              borderLeftWidth: '3px',
+              borderRightWidth: '1px',
+              borderTopWidth: '1px',
+              borderBottomWidth: '1px',
+              marginLeft: '-5px',
+            }}
           >
-            {segmentDuration >= 31 && (
-              <span
-                style={{
-                  position: "relative",
-                  top: "4px",
-                  fontSize: "11px",
-                  fontStyle: "italic",
-                }}
-              >
-                {localLabel}
-              </span>
-            )}
-            {/* Render these icons only if readOnly is false */}
-            {!readOnly && (
-              <>
+            {/* Top section: Entity label */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {EntityIcon && (
+                  <div className="flex items-center bg-white/80 px-1.5 py-0.5 rounded-md shadow-sm">
+                    <EntityIcon size={13} className="text-gray-700" />
+                    {localEntity?.name && segmentDuration >= 59 && (
+                      <span className="ml-1 text-xs font-medium text-gray-700 truncate max-w-[90px]">
+                        {localEntity.name}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Edit button */}
+              {!readOnly && (
                 <button
                   ref={editButtonRef}
                   onClick={toggleEditor}
                   onMouseDown={(e) => e.stopPropagation()}
-                  className="absolute top-1 right-1 bg-transparent border-0 rounded-full w-4 h-4 cursor-pointer p-0 flex items-center justify-center"
+                  className="rounded-full p-1 hover:bg-white/50 transition-colors duration-200 focus:outline-none"
                 >
-                  <FaPencilAlt size={14} className="text-white-500" />
+                  <FaEdit size={12} className="text-gray-600" />
                 </button>
-                {segmentDuration > 95 && (
-                  <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
-                    <MdDragHandle size={15} />
-                  </div>
-                )}
-              </>
+              )}
+            </div>
+
+            {/* Middle section: Label */}
+            {segmentDuration >= 31 && (
+              <div className="flex justify-center items-center flex-1">
+                <span className="text-xs font-medium text-gray-700 truncate max-w-[95%]">
+                  {localLabel}
+                </span>
+              </div>
             )}
+
+            {/* Bottom section: Time and user */}
+            <div className="flex items-center justify-between">
+              {user && segmentDuration >= 59 && (
+                <div className="flex items-center">
+                  <FaUser size={10} className="text-gray-600 mr-1" />
+                  <span className="text-[10px] font-medium text-gray-600">
+                    {user}
+                  </span>
+                </div>
+              )}
+              
+              {segmentStartTimeStr && segmentEndTimeStr && segmentDuration >= 79 && (
+                <div className="text-[10px] font-medium text-gray-600">
+                  {`${segmentStartTimeStr} - ${segmentEndTimeStr}`}
+                </div>
+              )}
+            </div>
+            
+            {/* Drag indicator */}
+            {!readOnly && segmentDuration > 95 && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+                <MdDragIndicator size={16} className="text-gray-700" />
+              </div>
+            )}
+
+            {/* Editor portal */}
             {showEditor && !readOnly &&
               ReactDOM.createPortal(
                 <SegmentEditorMenu
@@ -247,26 +318,6 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
                 />,
                 document.body
               )}
-            {segmentStartTimeStr && segmentEndTimeStr && segmentDuration >= 79 && (
-              <div className="absolute bottom-1 right-1 text-[11px] text-gray-800 font-semibold">
-                {` ${segmentStartTimeStr} - ${segmentEndTimeStr}`}
-              </div>
-            )}
-            {user && segmentDuration >= 59 && (
-              <div className="absolute bottom-1 left-1 text-[11px] text-gray-800 font-semibold">
-                
-                {`${user}`}
-              </div>
-            )}
-            <div className="absolute top-1 left-1 px-[3px] py-[.5px] mr-2 bg-opacity-75 rounded-lg bg-gray-200 text-[11px] text-gray-600 flex items-center">
-              {EntityIcon && (
-                <EntityIcon
-                  size={14}
-                  className={`${segmentDuration >= 59 ? "mr-1" : ""} text-gray-700`}
-                />
-              )}
-              {localEntity?.name && segmentDuration >= 59 && <span>{localEntity.name}</span>}
-            </div>
           </div>
         </ResizableBox>
       </div>
