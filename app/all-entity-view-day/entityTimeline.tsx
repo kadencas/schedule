@@ -75,6 +75,10 @@ export default function EntityTimeline({
           shiftEndTime={shiftEndTime}
           gridHeight={grid_height}
           readOnly={readOnly}
+          selectedDay={selectedDay}
+          user="" // Passing empty string - the user will come from the segments
+          onShiftSave={(shiftId, updatedData) => console.log('Shift save not supported in entity view')}
+          entities={[entity]} // Pass the current entity as the only available entity
         />
       </div>
     </div>

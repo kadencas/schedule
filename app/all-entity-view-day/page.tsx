@@ -1,17 +1,49 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useAllEntitiesShifts } from "./useAllEntities";
 import EntityTimeline from "./entityTimeline";
 import { defaultSelectedDay, formatMondayDate, getMostRecentMonday, getNextWeekMonday, getPreviousWeekMonday } from "../individual-schedule-builder/helper/helper";
 import WeekDayToggle from "../individual-schedule-builder/components/weekDayToggle";
-import { useUserShifts } from "../individual-schedule-builder/hooks/useUserShift";
+import { useAllEmployeesShifts } from "../all-schedule-view-day/useAllEmployeeShifts";
+import { Shift, Employee } from "@/types/types";
 
 export default function EntityShiftsPage() {
-  const { entities, loading, error } = useAllEntitiesShifts();
-  const { userShifts } = useUserShifts(); 
+  const { entities, loading: entitiesLoading, error: entitiesError } = useAllEntitiesShifts();
+  const { employees, loading: employeesLoading, error: employeesError } = useAllEmployeesShifts(); 
 
   const [currentMonday, setCurrentMonday] = useState(getMostRecentMonday(new Date()));
   const [selectedDay, setSelectedDay] = useState(defaultSelectedDay);
+
+  // Process all shifts from all employees into a flat array
+  const allUserShifts = useMemo(() => {
+    if (!employees || employees.length === 0) return [];
+    
+    // Flatten all shifts from all employees
+    const allShifts: Shift[] = [];
+    
+    employees.forEach((employee: Employee) => {
+      if (employee.shifts && employee.shifts.length > 0) {
+        // Process each shift to ensure date objects
+        const processedShifts = employee.shifts.map((shift: any) => ({
+          ...shift,
+          startTime: new Date(shift.startTime),
+          endTime: new Date(shift.endTime),
+          segments: shift.segments.map((segment: any) => ({
+            ...segment,
+            startTime: new Date(segment.startTime),
+            endTime: new Date(segment.endTime),
+          })),
+          // Add username to help with debugging
+          userName: employee.name 
+        }));
+        
+        allShifts.push(...processedShifts);
+      }
+    });
+    
+    console.log(`Processed ${allShifts.length} total shifts from ${employees.length} employees`);
+    return allShifts;
+  }, [employees]);
 
   const handlePreviousWeek = () => {
     setCurrentMonday(getPreviousWeekMonday(currentMonday));
@@ -23,8 +55,11 @@ export default function EntityShiftsPage() {
 
   const formattedMondayDate = formatMondayDate(currentMonday);
 
-  if (loading) return <p>Loading entity shifts...</p>;
-  if (error) return <p>Error loading entity shifts: {error.message}</p>;
+  const isLoading = entitiesLoading || employeesLoading;
+  const error = entitiesError || employeesError;
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error loading data: {error.message}</p>;
 
   return (
     <div>
@@ -39,7 +74,7 @@ export default function EntityShiftsPage() {
       {entities.map((entity) => (
         <div key={`${entity.id}-${selectedDay}`} className="">
           <EntityTimeline
-            userShifts={userShifts}
+            userShifts={allUserShifts}
             entity={entity}
             currentMonday={currentMonday}
             selectedDay={selectedDay}

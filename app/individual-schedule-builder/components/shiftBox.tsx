@@ -349,7 +349,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                   readOnly={readOnly}
                   entities={entities}
                   onEntityUpdate={handleEntityUpdate}
-                  user={user}
+                  user={(seg as any).user || user}
                 />
               ))}
               <button

@@ -1,21 +1,29 @@
-
 export interface Shift {
   recurrenceRule: string;
   id: string;
-  startTime: string; 
-  endTime: string;   
+  startTime: Date | string;
+  endTime: Date | string;
+  userId?: string;
   segments: Segment[];
-  shiftDate: Date;
+  shiftDate: string;
+  isRecurring?: boolean;
+  entityId?: string;
 }
 
 export interface Segment {
-  entity: any;
   id: string;
   label: string;
   start: number;
   end: number;
   color: string;
   location: string;
+  entity?: any;
+  entities?: any;
+  entityId?: string;
+  startTime?: Date | string;
+  endTime?: Date | string;
+  segmentType?: string;
+  user?: string;
 }
 
 export interface Employee {
@@ -39,7 +47,6 @@ export interface DraftShift {
   title: string;
   location?: string;
 }
-
 
 export interface Entity {
   id: string;
