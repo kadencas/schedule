@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import WeekDayToggle from "./components/weekDayToggle";
 import ShiftMenu from "./components/shiftMenu";
 import Timeline from "./components/timeline";
-import styles from "./styles/Page.module.css"
 import { useShiftManagement } from "./hooks/useShiftManagement";
 import { useUserShifts } from "./hooks/useUserShift";
 import {
@@ -16,6 +15,8 @@ import {
 import { useSession } from "next-auth/react";
 import { Shift } from "@/types/types";
 import { useEntities } from "./hooks/useEntities";
+import { motion } from "framer-motion";
+import { FiClock, FiCalendar, FiGrid, FiInfo } from "react-icons/fi";
 
 export default function Page() {
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -26,9 +27,14 @@ export default function Page() {
   const readOnly = false;
   const { data: session } = useSession();
   const { entities: entities } = useEntities();
+  const [isMounted, setIsMounted] = useState(false);
 
   // returns an object and renames userShifts fetchedUser shifts to indicate they were pulled from backend
   const { userShifts: fetchedUserShifts } = useUserShifts(); 
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   /**
    * anytime fetchedUserShifts changes (backend changes), update the array
@@ -46,9 +52,6 @@ export default function Page() {
   /**
    * takes shift ID for shift to update, and some updated data,
    * looks at userShifts array and updates the corresponding data
-   * 
-   * @param shiftId 
-   * @param updatedData 
    */
   function handleShiftChangesSaved(shiftId: string, updatedData: Partial<Shift>) {
     console.log("updated data", updatedData)
@@ -124,6 +127,7 @@ export default function Page() {
     // Use the authenticated user's id from the session.
     const userId = session.user.id;
 
+    // Convert Date objects to ISO strings for the API
     const shiftData = {
       userId,
       shiftDate: shiftDateObj.toISOString(),
@@ -149,32 +153,19 @@ export default function Page() {
         throw new Error("Failed to create shift");
       }
       const data = await response.json();
-      // Optionally: Refresh shifts or update local state as needed:
-      // Merge into your existing userShifts
 
       const createdShift = data.shift;
       const newShift: Shift = {
         id: createdShift.id,
         userId: createdShift.userId,
-        // shiftDate, startTime, endTime are ISO strings on the server
-        shiftDate: new Date(createdShift.shiftDate),
+        shiftDate: new Date(createdShift.shiftDate).toISOString(),
         startTime: new Date(createdShift.startTime),
         endTime: new Date(createdShift.endTime),
-
-        // If your server returns booleans/strings, just reuse them
         isRecurring: createdShift.isRecurring,
         recurrenceRule: createdShift.recurrenceRule,
-        recurrenceEndDate: createdShift.recurrenceEndDate
-          ? new Date(createdShift.recurrenceEndDate)
-          : null,
-        notes: createdShift.notes,
-
-        // If server didn't return segments, just do an empty array
         segments: createdShift.segments || [],
       };
 
-      // Now you have a well-typed "Shift" object with real Date objects
-      // Add it to your local userShifts array
       setUserShifts((prevShifts) => [...prevShifts, newShift]);
 
     } catch (error) {
@@ -204,42 +195,146 @@ export default function Page() {
     handleCreateSegment,
   } = useShiftManagement(userShifts, currentMonday, selectedDay);
 
+  // Animation variants for staggered animations
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.3 } }
+  };
+
   return (
-    <div className={styles.container}>
-      <WeekDayToggle
-        currentMonday={currentMonday}
-        formattedMondayDate={formattedMondayDate}
-        handlePreviousWeek={handlePreviousWeek}
-        handleNextWeek={handleNextWeek}
-        selectedDay={selectedDay}
-        setSelectedDay={setSelectedDay}
-      />
-
-      <div className={styles.mainLayout}>
-        <Timeline
-          snapToGrid={snapToGrid}
-          shiftSegments={shiftSegments}
-          matchingShift={matchingShift}
-          initialX={initialX}
-          initialWidth={initialWidth}
-          shiftStartTime={shiftStartTime}
-          shiftEndTime={shiftEndTime}
-          gridHeight={grid_height}
-          readOnly={readOnly}
-          onShiftSave={handleShiftChangesSaved}
-          entities={entities}
-          selectedDay={selectedDay}
-        />
-
-        <div className={styles.rightPanel}>
-          <ShiftMenu
-            matchingShift={matchingShift}
-            snapToGrid={snapToGrid}
-            setSnapToGrid={setSnapToGrid}
-            onAddShift={handleAddShift}
-          />
+    <motion.div 
+      className="w-full h-screen bg-gray-50 overflow-auto"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Header with soft gradient */}
+      <motion.div 
+        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-6 shadow-md"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-2xl font-bold mb-1 flex items-center">
+            <FiCalendar className="mr-2" />
+            Schedule Builder
+          </h1>
+          <p className="text-blue-100 text-sm max-w-2xl">
+            Create and manage your schedule by selecting days and adding shifts. Drag to move shifts, resize to adjust duration.
+          </p>
         </div>
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate={isMounted ? "visible" : "hidden"}
+          className="flex flex-col space-y-6"
+        >
+          {/* Week Navigation */}
+          <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+            <WeekDayToggle
+              currentMonday={currentMonday}
+              formattedMondayDate={formattedMondayDate}
+              handlePreviousWeek={handlePreviousWeek}
+              handleNextWeek={handleNextWeek}
+              selectedDay={selectedDay}
+              setSelectedDay={setSelectedDay}
+            />
+          </motion.div>
+
+          {/* Main Layout with Timeline and Shift Menu */}
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Timeline Section */}
+            <motion.div 
+              variants={itemVariants}
+              className="flex-grow bg-white rounded-xl shadow-sm p-4 border border-gray-100 overflow-hidden"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <FiClock className="mr-2 text-blue-500" size={18} />
+                  Time Schedule
+                </h2>
+                <div className="flex items-center">
+                  <div className="flex items-center text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                    <FiGrid className="mr-1" size={12} />
+                    {snapToGrid ? "Snap On" : "Snap Off"}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <Timeline
+                  snapToGrid={snapToGrid}
+                  shiftSegments={shiftSegments}
+                  matchingShift={matchingShift}
+                  initialX={initialX}
+                  initialWidth={initialWidth}
+                  shiftStartTime={shiftStartTime}
+                  shiftEndTime={shiftEndTime}
+                  gridHeight={grid_height}
+                  readOnly={readOnly}
+                  onShiftSave={handleShiftChangesSaved}
+                  entities={entities}
+                  selectedDay={selectedDay}
+                  user={session?.user?.name || "Anonymous User"}
+                />
+                
+                {!matchingShift && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="absolute inset-0 flex items-center justify-center text-center p-4"
+                  >
+                    <div className="max-w-md">
+                      <div className="bg-blue-50 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
+                        <FiInfo className="text-blue-400" size={24} />
+                      </div>
+                      <h3 className="font-medium text-gray-700 mb-2">No Shift on {selectedDay}</h3>
+                      <p className="text-gray-500 text-sm mb-4">
+                        Click "Add Shift" in the options menu to create a new shift for this day.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+            
+            {/* Shift Menu */}
+            <motion.div
+              variants={itemVariants}
+              className="w-full md:w-72 bg-white rounded-xl shadow-sm border border-gray-100 p-4"
+            >
+              <div className="mb-3">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <FiCalendar className="mr-2 text-blue-500" size={18} />
+                  Shift Options
+                </h2>
+              </div>
+              <ShiftMenu
+                matchingShift={matchingShift}
+                snapToGrid={snapToGrid}
+                setSnapToGrid={setSnapToGrid}
+                onAddShift={handleAddShift}
+              />
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

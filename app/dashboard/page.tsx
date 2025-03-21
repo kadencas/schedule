@@ -148,7 +148,7 @@ export default function Dashboard() {
                   : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                View People's Schedule
+                Employees Schedule
               </button>
               <button
                 onClick={() => setActiveMainTab("tagSchedule")}
@@ -158,7 +158,7 @@ export default function Dashboard() {
                   : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                View Tag's Schedule
+                Tags Schedule
               </button>
               <button
                 onClick={() => setActiveMainTab("management")}

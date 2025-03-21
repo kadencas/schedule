@@ -34,7 +34,7 @@ interface MyScheduleTabProps {
 }
 
 export default function MyScheduleTab({ employeeData, userName, localizer }: MyScheduleTabProps) {
-  const [selectedView, setSelectedView] = useState<"schedule" | "details" | "editor">("schedule");
+  const [selectedView, setSelectedView] = useState<"schedule" | "details">("schedule");
   const [showNextShifts, setShowNextShifts] = useState(true);
   
   const today = new Date();
@@ -222,19 +222,6 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
             Schedule
           </button>
           <button
-            onClick={() => setSelectedView("editor")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              selectedView === "editor" 
-                ? "bg-white shadow-sm text-blue-600" 
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            <span className="flex items-center">
-              <FiEdit size={14} className="mr-1" />
-              Create Shifts
-            </span>
-          </button>
-          <button
             onClick={() => setSelectedView("details")}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
               selectedView === "details" 
@@ -410,11 +397,27 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
               </motion.div>
             </div>
             
-            {/* Calendar Card */}
+            {/* Schedule Builder Component - Added here */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.4 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6"
+            >
+              <h2 className="text-lg font-semibold text-gray-800 px-5 py-4 border-b border-gray-100 flex items-center">
+                <FiEdit size={16} className="mr-2 text-blue-500" />
+                Schedule Builder
+              </h2>
+              <div className="schedule-builder-container">
+                <ScheduleBuilderComponent />
+              </div>
+            </motion.div>
+            
+            {/* Calendar Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
               className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6"
             >
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Monthly Calendar</h2>
@@ -430,36 +433,6 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
                 />
               </div>
             </motion.div>
-          </motion.div>
-        ) : selectedView === "editor" ? (
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-          >
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                  <FiPlusCircle className="mr-2 text-blue-500" size={18} />
-                  Schedule Builder
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">Create and manage your shifts with this interactive tool</p>
-              </div>
-              <button 
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
-                onClick={() => alert("This would save your schedule changes to the server")}
-              >
-                <FiCheck className="mr-1" size={16} />
-                Apply Changes
-              </button>
-            </div>
-            
-            <div className="schedule-builder-container">
-              <ScheduleBuilderComponent />
-            </div>
           </motion.div>
         ) : (
           <motion.div
@@ -618,32 +591,37 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
         
         /* Schedule Builder Styling */
         .schedule-builder-container {
-          height: calc(100vh - 240px);
-          min-height: 600px;
           overflow: hidden;
-          border-top: 1px solid #f3f4f6;
+          border-top: 0;
+          max-height: 600px;
         }
         
         .schedule-builder-container > div {
-          height: 100%;
+          height: auto !important;
           padding: 0;
+          overflow: auto;
         }
         
-        /* Customize schedule builder to match our UI */
-        .schedule-builder-container :global(.p-4) {
-          padding: 1rem;
+        /* Hide the original header from the schedule builder */
+        .schedule-builder-container :global(.bg-gradient-to-r.from-blue-600.to-blue-700) {
+          display: none;
         }
         
-        .schedule-builder-container :global(.shadow-md) {
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        /* Adjust padding and spacing for the builder content */
+        .schedule-builder-container :global(.max-w-7xl) {
+          padding: 0;
+          margin: 0;
         }
         
-        .schedule-builder-container :global(.bg-white) {
-          background-color: #ffffff;
+        /* Fix spacing in the schedule builder */
+        .schedule-builder-container :global(.py-6) {
+          padding-top: 1rem;
+          padding-bottom: 0;
         }
         
-        .schedule-builder-container :global(.rounded-lg) {
-          border-radius: 0.5rem;
+        /* Ensure the timeline doesn't create extra space */
+        .schedule-builder-container :global(.flex.flex-col.space-y-6) {
+          margin-bottom: 0;
         }
       `}</style>
     </div>

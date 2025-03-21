@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { TbRepeat, TbX } from "react-icons/tb";
+import { FiCalendar, FiClock, FiRepeat } from "react-icons/fi";
 
 type Frequency = "NONE" | "DAILY" | "WEEKLY" | "MONTHLY";
 
@@ -26,9 +28,8 @@ export default function ShiftBoxMenu({
   isRecurring: initialRecurring,
   recurrenceRule: initialRecurrenceRule,
   onRecurrenceChange,
-  onClose, // receiving the callback
+  onClose,
   style = {}
-  
 }: ShiftBoxMenuProps) {
   const [isRecurring, setIsRecurring] = useState(initialRecurring);
   const [frequency, setFrequency] = useState<Frequency>("NONE");
@@ -127,94 +128,176 @@ export default function ShiftBoxMenu({
     onRecurrenceChange(buildRRule(isRecurring, frequency, interval, updatedDays), isRecurring);
   }
 
+  // Get frequency description for display
+  const getFrequencyDescription = (): string => {
+    if (!isRecurring) return "Not recurring";
+    if (frequency === "NONE") return "No pattern set";
+    if (frequency === "DAILY") {
+      return interval === 1 ? "Every day" : `Every ${interval} days`;
+    }
+    if (frequency === "WEEKLY") {
+      if (selectedDays.length === 0) {
+        return interval === 1 ? "Every week" : `Every ${interval} weeks`;
+      } else {
+        const dayLabels = selectedDays.map(
+          (day) => DAYS_OF_WEEK.find((d) => d.value === day)?.label
+        ).join(", ");
+        return interval === 1 
+          ? `Every week on ${dayLabels}` 
+          : `Every ${interval} weeks on ${dayLabels}`;
+      }
+    }
+    if (frequency === "MONTHLY") {
+      return interval === 1 ? "Every month" : `Every ${interval} months`;
+    }
+    return "Custom pattern";
+  };
+
   return (
     <motion.div
       style={style}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.95, y: -5 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: -5 }}
       transition={{ duration: 0.2 }}
-      className="relative space-y-4 p-2 bg-white rounded-lg shadow-md z-50"
+      className="w-64 relative bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-200"
     >
-      {/* Close Button */}
-      <button
-        onClick={onClose}
-        className="absolute top-1 right-1 text-gray-600 text-sm hover:text-gray-900"
-      >
-        ✕
-      </button>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center">
+          <FiRepeat className="text-white mr-2" size={14} />
+          <h4 className="text-sm font-medium text-white">Recurrence Settings</h4>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-white/80 hover:text-white transition-colors focus:outline-none"
+          aria-label="Close"
+        >
+          <TbX size={16} />
+        </button>
+      </div>
 
-      <h4 className="text-md font-semibold">Recurrence Settings</h4>
-
-      {/* Recurrence Toggle */}
-      <label className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          checked={isRecurring}
-          onChange={handleToggleRecurring}
-          className="h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
-        />
-        <span className="text-gray-700">Recurring Shift</span>
-      </label>
-
-      {isRecurring && (
-        <>
-          {/* Frequency */}
-          <div className="flex flex-col">
-            <label className="text-gray-700 text-sm">Frequency</label>
-            <select
-              value={frequency}
-              onChange={handleFrequencyChange}
-              className="border border-gray-300 rounded p-1 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+      <div className="p-4 space-y-4">
+        {/* Recurrence Toggle */}
+        <div className="flex items-center justify-between">
+          <label htmlFor="recurring-toggle" className="flex items-center space-x-2 cursor-pointer w-full">
+            <div 
+              className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors duration-300 ${isRecurring ? 'bg-green-500' : 'bg-gray-300'}`}
+              onClick={(e) => {
+                e.preventDefault();
+                const newValue = !isRecurring;
+                setIsRecurring(newValue);
+                if (!newValue) {
+                  setFrequency("NONE");
+                  setInterval(1);
+                  setSelectedDays([]);
+                }
+                onRecurrenceChange(newValue ? generateRRule() : null, newValue);
+              }}
             >
-              <option value="NONE">None</option>
-              <option value="DAILY">Daily</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="MONTHLY">Monthly</option>
-            </select>
-          </div>
+              <motion.div 
+                className="bg-white w-3.5 h-3.5 rounded-full shadow-md" 
+                animate={{ x: isRecurring ? 20 : 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            </div>
+            <span className="text-sm font-medium text-gray-700">Recurring Shift</span>
+          </label>
+          <input 
+            type="checkbox" 
+            checked={isRecurring} 
+            onChange={handleToggleRecurring} 
+            className="sr-only" 
+            id="recurring-toggle"
+          />
+        </div>
 
-          {/* Interval */}
-          <div className="flex flex-col">
-            <label className="text-gray-700 text-sm">Interval</label>
-            <input
-              type="number"
-              min="1"
-              value={interval}
-              onChange={handleIntervalChange}
-              className="border border-gray-300 rounded p-1 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
-            />
-            <small className="text-xs text-gray-500">
-              E.g. 1 for every unit; 2 for every 2 units
-            </small>
-          </div>
+        {isRecurring && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            {/* Frequency */}
+            <div className="space-y-1.5">
+              <label className="flex items-center text-xs font-medium text-gray-500">
+                <FiCalendar className="mr-1.5" size={12} />
+                Frequency
+              </label>
+              <select
+                value={frequency}
+                onChange={handleFrequencyChange}
+                className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              >
+                <option value="NONE">None</option>
+                <option value="DAILY">Daily</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="MONTHLY">Monthly</option>
+              </select>
+            </div>
 
-          {/* Days of Week (Only if Weekly) */}
-          {frequency === "WEEKLY" && (
-            <div className="flex flex-col">
-              <label className="text-gray-700 text-sm mb-1">Days of the Week</label>
-              <div className="grid grid-cols-7 gap-1">
-                {DAYS_OF_WEEK.map((day) => (
-                  <label key={day.value} className="flex items-center space-x-1 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={selectedDays.includes(day.value)}
-                      onChange={() => handleDaySelection(day.value)}
-                      className="h-4 w-4 text-gray-600 border-gray-300 rounded focus:ring-gray-500"
-                    />
-                    <span>{day.label}</span>
-                  </label>
-                ))}
+            {/* Interval */}
+            <div className="space-y-1.5">
+              <label className="flex items-center text-xs font-medium text-gray-500">
+                <FiClock className="mr-1.5" size={12} />
+                Repeat every
+              </label>
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  min="1"
+                  value={interval}
+                  onChange={handleIntervalChange}
+                  className="w-16 border border-gray-300 rounded-md py-1.5 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <span className="ml-2 text-sm text-gray-600">
+                  {frequency === "DAILY" && "day(s)"}
+                  {frequency === "WEEKLY" && "week(s)"}
+                  {frequency === "MONTHLY" && "month(s)"}
+                  {frequency === "NONE" && "period(s)"}
+                </span>
               </div>
             </div>
-          )}
 
-          {/* Debugging: Display generated RRULE */}
-          <div className="text-xs text-gray-500">
-            <strong>Generated RRULE:</strong> {generateRRule() || "None"}
-          </div>
-        </>
-      )}
+            {/* Days of Week (Only if Weekly) */}
+            {frequency === "WEEKLY" && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-1.5"
+              >
+                <label className="flex items-center text-xs font-medium text-gray-500">
+                  On these days
+                </label>
+                <div className="flex justify-between flex-wrap gap-1">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <button
+                      key={day.value}
+                      onClick={() => handleDaySelection(day.value)}
+                      className={`w-8 h-8 rounded-full text-xs font-medium transition-all
+                        ${selectedDays.includes(day.value) 
+                          ? 'bg-blue-500 text-white shadow-sm' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    >
+                      {day.label.substring(0, 1)}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Summary */}
+            <div className="mt-4 pt-3 border-t border-gray-100">
+              <div className="text-xs text-gray-500 font-medium">Summary</div>
+              <div className="text-sm text-gray-800 mt-1">
+                {getFrequencyDescription()}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   );
 }

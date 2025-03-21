@@ -61,13 +61,19 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null!);
   const editButtonRef = useRef<HTMLButtonElement>(null);
-
+  
+  // Track the actual pixel position (not snapped)
+  const [position, setPosition] = useState({ x: 0, y: 4 });
+  const [isDragging, setIsDragging] = useState(false);
   const [leftPx, setLeftPx] = useState(segment.start);
   const [widthPx, setWidthPx] = useState(segment.end - segment.start);
   const [showEditor, setShowEditor] = useState(false);
   const [localLabel, setLocalLabel] = useState(segment.label);
   const [localColor, setLocalColor] = useState(segment.color);
   const [localEntity, setLocalEntity] = useState(segment.entity);
+  
+  // Store the actual mouse position during drag
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
 
   // Preset color options (6 distinct choices)
   const colorOptions = [
@@ -80,31 +86,73 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   ];
 
   useEffect(() => {
-    // Adjust position calculation for perfect alignment with timeline
-    setLeftPx(Math.round(segment.start / 0.6));
-    setWidthPx(Math.round((segment.end - segment.start) / 0.6));
+    // Only update position if we're not in the middle of dragging
+    if (!isDragging) {
+      const newX = Math.round(segment.start / 0.6);
+      setLeftPx(newX);
+      setPosition({ x: newX, y: 4 });
+      setWidthPx(Math.round((segment.end - segment.start) / 0.6));
+    }
     setLocalLabel(segment.label);
-  }, [segment.start, segment.end, segment.label]);
+  }, [segment.start, segment.end, segment.label, isDragging]);
 
   useEffect(() => {
     setLocalColor(segment.color);
   }, [segment.color]);
 
-  // DRAG: update position state and notify parent in minutes
+  // When dragging starts, capture the initial position
+  const handleDragStart = (_: DraggableEvent, data: DraggableData) => {
+    setIsDragging(true);
+    dragOffsetRef.current = { x: data.x, y: data.y };
+  };
+
+  // DRAG: update position state in real-time to match cursor
   const handleDrag = (_: DraggableEvent, data: DraggableData) => {
-    let newX = data.x;
+    // Update real position immediately to ensure cursor tracking
+    setPosition({ x: data.x, y: 4 });
+    
+    // Calculate the snapped position (but only for display purposes during the drag)
+    let snappedX = data.x;
     if (snapToGrid) {
-      newX = Math.round(newX / SNAP_PX) * SNAP_PX;
+      snappedX = Math.round(data.x / SNAP_PX) * SNAP_PX;
     }
-    setLeftPx(newX);
-    // Only update the x-coordinate position, preserving the y position (gap)
-    onUpdate(segment.id, Math.round(newX * 0.6), Math.round((newX + widthPx) * 0.6));
+    
+    // Update the leftPx which is used for calculations
+    setLeftPx(snappedX);
+  };
+
+  // When dragging stops, finalize the position and notify parent
+  const handleDragStop = (_: DraggableEvent, data: DraggableData) => {
+    setIsDragging(false);
+    
+    let finalX = data.x;
+    if (snapToGrid) {
+      finalX = Math.round(finalX / SNAP_PX) * SNAP_PX;
+    }
+    
+    // Update both our internal position and notify the parent
+    setPosition({ x: finalX, y: 4 });
+    setLeftPx(finalX);
+    
+    // Convert to minutes and update parent
+    onUpdate(
+      segment.id, 
+      Math.round(finalX * 0.6), 
+      Math.round((finalX + widthPx) * 0.6)
+    );
   };
 
   // RESIZE: update width during drag (and convert when notifying parent)
   const handleResize = (_: React.SyntheticEvent, data: { size: { width: number } }) => {
     setWidthPx(data.size.width);
-    onUpdate(segment.id, Math.round(leftPx * 0.6), Math.round((leftPx + data.size.width) * 0.6));
+    
+    // Only update during resize if we want immediate feedback
+    // For smoother performance, consider commenting this out and only updating on stop
+    onUpdate(
+      segment.id, 
+      Math.round(leftPx * 0.6), 
+      Math.round((leftPx + data.size.width) * 0.6)
+    );
   };
 
   // RESIZE STOP: snap width and update parent state in minutes
@@ -114,7 +162,11 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
       newWidth = Math.round(newWidth / SNAP_PX) * SNAP_PX;
     }
     setWidthPx(newWidth);
-    onUpdate(segment.id, Math.round(leftPx * 0.6), Math.round((leftPx + newWidth) * 0.6));
+    onUpdate(
+      segment.id, 
+      Math.round(leftPx * 0.6), 
+      Math.round((leftPx + newWidth) * 0.6)
+    );
   };
 
   // Toggle the editor for the segment name and color.
@@ -180,7 +232,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   // Create a lighter version of the color for the background
   const getBackgroundColor = () => {
     if (!localColor || localColor === '#ffffff' || localColor === 'white') {
-      return 'rgba(255, 255, 255, 0.85)';
+      return 'rgba(255, 255, 255, 0.9)';
     }
     
     // Extract RGB from hex color
@@ -206,17 +258,31 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
     return `rgb(${r}, ${g}, ${b})`;
   };
 
+  // Visual feedback during dragging
+  const dragStyles = isDragging ? { 
+    opacity: 0.9,
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    zIndex: 100,
+  } : {};
+
   return (
     <Draggable
       nodeRef={nodeRef}
       axis="x"
-      position={{ x: leftPx, y: 4 }}
+      position={position}
       bounds="parent"
+      onStart={!readOnly ? handleDragStart : undefined}
       onDrag={!readOnly ? handleDrag : undefined}
-      cancel=".react-resizable-handle"
+      onStop={!readOnly ? handleDragStop : undefined}
+      cancel=".react-resizable-handle, button"
       disabled={readOnly}
+      grid={snapToGrid ? [SNAP_PX, SNAP_PX] : undefined}
     >
-      <div ref={nodeRef} className={`${className} absolute h-full`} style={style}>
+      <div 
+        ref={nodeRef} 
+        className={`${className} absolute h-full select-none`} 
+        style={style}
+      >
         <ResizableBox
           width={widthPx}
           height={60}
@@ -226,9 +292,10 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
           onResize={!readOnly ? handleResize : undefined}
           onResizeStop={!readOnly ? handleResizeStop : undefined}
           handleSize={[8, 8]}
+          draggableOpts={{ disabled: isDragging }}
         >
           <div
-            className="w-full h-full rounded-md shadow-sm border backdrop-blur-[2px] flex flex-col justify-between p-1 relative cursor-move transition-all duration-200"
+            className="w-full h-full rounded-md shadow-sm border backdrop-blur-[2px] flex flex-col justify-between p-1 relative cursor-move transition-all duration-150"
             style={{ 
               backgroundColor: getBackgroundColor(),
               borderColor: getBorderColor(),
@@ -237,6 +304,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
               borderTopWidth: '1px',
               borderBottomWidth: '1px',
               marginLeft: '-5px',
+              ...dragStyles
             }}
           >
             {/* Top section: Entity label */}

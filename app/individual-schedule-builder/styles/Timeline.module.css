@@ -2,10 +2,14 @@
 .timelineContainer {
     position: relative;
     flex: 1;
-    margin: 0 5px 0;
+    margin: 0;
     box-sizing: border-box;
-    background-color: transparent;
+    background-color: #fafafa;
     overflow: visible !important;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
   }
   
   .gridLineMajor {
@@ -13,7 +17,8 @@
     top: 0;
     width: 1px;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(59, 130, 246, 0.25);
+    z-index: 1;
   }
   
   .gridLineMinor {
@@ -21,21 +26,58 @@
     top: 0;
     width: 1px;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.08);
+    background-color: rgba(0, 0, 0, 0.04);
+    z-index: 1;
   }
   
   .hourLabel {
     position: absolute;
     top: 100%;
     transform: translateX(-50%);
-    font-size: 10px;
-    color: #333;
+    font-size: 8px;
+    color: #666;
     margin-top: 2px;
     white-space: nowrap;
     font-weight: 500;
     z-index: 10;
     padding: 0;
     border-radius: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .timeMarker {
+    position: absolute;
+    height: 6px;
+    width: 1px;
+    background-color: rgba(59, 130, 246, 0.5);
+    top: calc(100% + 8px);
+    z-index: 1;
+  }
+  
+  .timeMarkerMajor {
+    width: 2px;
+    height: 8px;
+    background-color: rgba(59, 130, 246, 0.8);
+  }
+  
+  .currentTimeIndicator {
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background-color: #ef4444;
+    z-index: 2;
+    animation: pulse 2s infinite;
+  }
+  
+  .currentTimeIndicatorDot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    top: 0;
+    left: -2px;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
   }
 
   .shiftAnimation {
@@ -50,6 +92,18 @@
     to {
       opacity: 1;
       transform: translateX(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
   }
   

@@ -352,7 +352,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                         e.stopPropagation();
                         setIsRecurrenceMenuOpen(true);
                       }}
-                      className="bg-blue-700 hover:bg-blue-800 rounded-full p-1 transition-colors duration-200 focus:outline-none"
+                      className="bg-green-600 hover:bg-green-700 rounded-full p-1 transition-colors duration-200 focus:outline-none"
                       title={`Repeats: ${getHumanReadableRRule(localRecurrenceRule)}`}
                     >
                       <TbRepeat className="text-white" size={12} />
@@ -371,7 +371,32 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                 </span>
                 
                 {!readOnly && (
-                  <div className="absolute right-3 flex gap-1">
+                  <div className="absolute right-3 flex gap-1 items-center">
+                    {/* Add Segment Button - Moved to header */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddSegment();
+                      }}
+                      className="bg-blue-700 hover:bg-blue-800 text-white rounded-full p-1 transition-colors duration-200 focus:outline-none mr-1"
+                      title="Add segment"
+                    >
+                      <FaPlus size={10} />
+                    </button>
+
+                    {/* Save Button - Moved to header */}
+                    {hasChanges && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveChanges();
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white rounded-full p-1 transition-colors duration-200 focus:outline-none mr-1"
+                        title="Save changes"
+                      >
+                        <FaCheck size={10} />
+                      </button>
+                    )}
                     <MdDragIndicator className="text-white/60" size={16} />
                   </div>
                 )}
@@ -412,34 +437,7 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
                   }}
                 />
               ))}
-              
-              {!readOnly && (
-                <button
-                  onClick={handleAddSegment}
-                  style={{
-                    position: "absolute",
-                    left: `${maxSegmentEndPx + 10}px`,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                  }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1.5 shadow-sm transition-colors duration-200 focus:outline-none"
-                  title="Add segment"
-                >
-                  <FaPlus size={10} />
-                </button>
-              )}
             </div>
-
-            {/* Save button */}
-            {hasChanges && (
-              <button
-                onClick={handleSaveChanges}
-                className="absolute top-[40px] right-2 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-xs font-medium flex items-center shadow-sm transition-colors duration-200"
-              >
-                <FaCheck size={12} className="mr-1" />
-                Save
-              </button>
-            )}
           </div>
         </ResizableBox>
       </div>
