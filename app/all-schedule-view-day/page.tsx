@@ -12,7 +12,7 @@ import {
   days,
 } from "@/app/individual-schedule-builder/helper/helper";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiSearch, FiFilter, FiInfo, FiX } from "react-icons/fi";
+import { FiSearch, FiFilter, FiInfo, FiX, FiEdit, FiEye } from "react-icons/fi";
 import { Employee } from "@/types/types";
 import styles from "@/app/individual-schedule-builder/styles/Timeline.module.css";
 
@@ -101,6 +101,8 @@ export default function Page() {
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+  // Add state for read-only mode toggle
+  const [readOnly, setReadOnly] = useState(true);
   
   // Animation state
   const [direction, setDirection] = useState<"left" | "right" | null>(null);
@@ -255,87 +257,112 @@ export default function Page() {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {/* Search and Filter */}
         <div className="p-2">
-          <div className="flex items-center gap-2">
-            {/* Search */}
-            <div className="relative flex-grow sm:max-w-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiSearch className="text-gray-400" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              {/* Search */}
+              <div className="relative flex-grow sm:max-w-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search employees..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="Search employees..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            
-            {/* Filter button */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-                className={`p-2 rounded-md ${departmentFilter ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} flex items-center`}
-                title="Filter by department"
-              >
-                <FiFilter size={16} />
-                {departmentFilter && (
-                  <span className="ml-1 text-xs font-medium hidden sm:inline">
-                    {departmentFilter}
-                  </span>
-                )}
-              </button>
               
-              {/* Filter dropdown */}
-              {showDepartmentFilter && (
-                <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 w-48 py-1">
-                  <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
-                    Filter by Department
-                  </div>
-                  
+              {/* Filter button */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                  className={`p-2 rounded-md ${departmentFilter ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} flex items-center`}
+                  title="Filter by department"
+                >
+                  <FiFilter size={16} />
                   {departmentFilter && (
-                    <button 
-                      onClick={clearDepartmentFilter}
-                      className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                    >
-                      <FiX size={14} className="mr-2" />
-                      Clear Filter
-                    </button>
+                    <span className="ml-1 text-xs font-medium hidden sm:inline">
+                      {departmentFilter}
+                    </span>
                   )}
-                  
-                  {uniqueDepartments.length === 0 ? (
-                    <div className="px-3 py-2 text-sm text-gray-500">
-                      No departments available
+                </button>
+                
+                {/* Filter dropdown */}
+                {showDepartmentFilter && (
+                  <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 w-48 py-1">
+                    <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
+                      Filter by Department
                     </div>
-                  ) : (
-                    uniqueDepartments.map(department => (
-                      <button
-                        key={department}
-                        onClick={() => {
-                          setDepartmentFilter(department);
-                          setShowDepartmentFilter(false);
-                        }}
-                        className={`px-3 py-2 text-sm w-full text-left hover:bg-gray-50 ${department === departmentFilter ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
+                    
+                    {departmentFilter && (
+                      <button 
+                        onClick={clearDepartmentFilter}
+                        className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                       >
-                        {department}
+                        <FiX size={14} className="mr-2" />
+                        Clear Filter
                       </button>
-                    ))
-                  )}
+                    )}
+                    
+                    {uniqueDepartments.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-gray-500">
+                        No departments available
+                      </div>
+                    ) : (
+                      uniqueDepartments.map(department => (
+                        <button
+                          key={department}
+                          onClick={() => {
+                            setDepartmentFilter(department);
+                            setShowDepartmentFilter(false);
+                          }}
+                          className={`px-3 py-2 text-sm w-full text-left hover:bg-gray-50 ${department === departmentFilter ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
+                        >
+                          {department}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Active filter indicator */}
+              {departmentFilter && (
+                <div className="flex items-center text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-1">
+                  <span className="mr-1">{departmentFilter}</span>
+                  <button 
+                    onClick={clearDepartmentFilter}
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    <FiX size={14} />
+                  </button>
                 </div>
               )}
             </div>
             
-            {/* Active filter indicator */}
-            {departmentFilter && (
-              <div className="flex items-center text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-1">
-                <span className="mr-1">{departmentFilter}</span>
-                <button 
-                  onClick={clearDepartmentFilter}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  <FiX size={14} />
-                </button>
-              </div>
-            )}
+            {/* Mode toggle button - moved here */}
+            <button
+              onClick={() => setReadOnly(!readOnly)}
+              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                readOnly 
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                  : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+              }`}
+              title={readOnly ? "Switch to edit mode" : "Switch to view mode"}
+            >
+              {readOnly ? (
+                <>
+                  <FiEdit className="mr-1.5" size={16} />
+                  <span>Edit</span>
+                </>
+              ) : (
+                <>
+                  <FiEye className="mr-1.5" size={16} />
+                  <span>View</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
         
@@ -375,6 +402,7 @@ export default function Page() {
                         employee={employee}
                         currentMonday={currentMonday}
                         selectedDay={selectedDay}
+                        readOnly={readOnly}
                       />
                     </motion.div>
                   ))}

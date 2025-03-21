@@ -8,16 +8,17 @@ interface EmployeeTimelineProps {
   employee: Employee;
   currentMonday: Date;
   selectedDay: string;
+  readOnly?: boolean;
 }
 
 export default function EmployeeTimeline({
   employee,
   currentMonday,
   selectedDay,
+  readOnly = true,
 }: EmployeeTimelineProps) {
   const snapToGrid = true;
   const grid_height = 40; // Even more compact height
-  const readOnly = true;
 
   // Memoize the processed shifts to avoid new references on every render
   const employeeShifts = useMemo(() => {
@@ -95,7 +96,7 @@ export default function EmployeeTimeline({
           gridHeight={grid_height}
           readOnly={readOnly}
           selectedDay={selectedDay}
-          onShiftSave={(shiftId, updatedData) => console.log('Shift save not supported in employee view')}
+          onShiftSave={(shiftId, updatedData) => console.log('Shift save', shiftId, updatedData)}
           entities={[]} // Empty array as entities are not needed in this view
         />
         
