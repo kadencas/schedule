@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useAllEmployeesShifts } from "./useAllEmployeeShifts";
 import EmployeeTimeline from "./EmployeeTimeline";
 import WeekDayToggle from "@/app/individual-schedule-builder/components/weekDayToggle";
@@ -13,6 +13,83 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { FiSearch, FiFilter, FiInfo, FiX } from "react-icons/fi";
 import { Employee } from "@/types/types";
+import styles from "@/app/individual-schedule-builder/styles/Timeline.module.css";
+
+// TimelineHeader component to display hour labels
+const TimelineHeader = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  
+  // Update container width on resize
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    // Initial width
+    updateWidth();
+    
+    // Update on resize
+    window.addEventListener('resize', updateWidth);
+    
+    return () => {
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, []);
+  
+  const numTicks = Math.floor(containerWidth / 25) + 1;
+  
+  return (
+    <div className="relative overflow-visible flex items-stretch h-6">
+      {/* Empty space to align with employee info column */}
+      <div className="w-[70px] flex-shrink-0 pr-2"></div>
+      
+      {/* Timeline header area */}
+      <div 
+        ref={containerRef} 
+        className="flex-1 relative h-6 overflow-visible"
+      >
+        {/* Time grid lines and hour labels */}
+        {Array.from({ length: numTicks }).map((_, i) => {
+          const leftPos = i * 25;
+          const isMajorTick = i % 4 === 0;
+          
+          if (isMajorTick) {
+            // Only render hour labels and major ticks
+            const hour = Math.floor(i / 4) + 9; // Starting from 9AM
+            const displayHour = hour > 12 ? hour - 12 : hour;
+            const amPm = hour >= 12 ? 'PM' : 'AM';
+            const hourLabel = `${displayHour}${amPm}`;
+            
+            return (
+              <div key={i}>
+                {/* Time marker tick */}
+                <div
+                  className="absolute w-[1px] h-2 bg-blue-400/40 bottom-0"
+                  style={{ left: leftPos }}
+                />
+                
+                {/* Hour label */}
+                <div
+                  className="absolute transform -translate-x-1/2 text-[7px] text-gray-500 font-medium"
+                  style={{ 
+                    left: leftPos,
+                    top: '0px',
+                  }}
+                >
+                  {hourLabel}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function Page() {
   // Fetch all employees with their shifts
@@ -192,8 +269,8 @@ export default function Page() {
         </div>
       </div>
       
-      {/* Employee Timelines */}
-      <div className="bg-white rounded-xl shadow-sm p-0.5 overflow-visible mb-6">
+      {/* Employee Timelines - Minimalistic Version */}
+      <div className="bg-white rounded-lg p-1">
         {filteredEmployees.length === 0 ? (
           <div className="text-center py-6">
             <FiInfo size={40} className="mx-auto text-gray-300 mb-2" />
@@ -204,7 +281,10 @@ export default function Page() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100 overflow-visible">
+          <div className="overflow-visible space-y-1">
+            {/* Add TimelineHeader above the first timeline */}
+            <TimelineHeader />
+            
             <AnimatePresence>
               {filteredEmployees.map((employee: Employee, index: number) => (
                 <motion.div
@@ -213,7 +293,7 @@ export default function Page() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}
-                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} overflow-visible mb-0`}
+                  className="bg-white overflow-visible pt-2"
                 >
                   <EmployeeTimeline
                     employee={employee}

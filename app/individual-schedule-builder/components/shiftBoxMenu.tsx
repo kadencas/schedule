@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { TbRepeat, TbX } from "react-icons/tb";
+import { TbCalendarRepeat, TbCalendarTime, TbCircleCheck, TbX } from "react-icons/tb";
 import { FiCalendar, FiClock, FiRepeat } from "react-icons/fi";
 
 type Frequency = "NONE" | "DAILY" | "WEEKLY" | "MONTHLY";
@@ -160,29 +160,31 @@ export default function ShiftBoxMenu({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: -5 }}
       transition={{ duration: 0.2 }}
-      className="w-64 relative bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-200"
+      className="w-72 relative bg-white rounded-xl shadow-xl overflow-hidden z-50 border border-gray-200"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-indigo-600 to-blue-500 px-5 py-3.5 flex items-center justify-between">
         <div className="flex items-center">
-          <FiRepeat className="text-white mr-2" size={14} />
-          <h4 className="text-sm font-medium text-white">Recurrence Settings</h4>
+          <div className="bg-white/20 p-1.5 rounded-lg mr-3">
+            <TbCalendarRepeat className="text-white" size={18} />
+          </div>
+          <h4 className="text-sm font-semibold text-white tracking-wide">Recurrence</h4>
         </div>
         <button
           onClick={onClose}
-          className="text-white/80 hover:text-white transition-colors focus:outline-none"
+          className="text-white/70 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-all focus:outline-none"
           aria-label="Close"
         >
-          <TbX size={16} />
+          <TbX size={18} />
         </button>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-5 space-y-5">
         {/* Recurrence Toggle */}
         <div className="flex items-center justify-between">
-          <label htmlFor="recurring-toggle" className="flex items-center space-x-2 cursor-pointer w-full">
+          <label htmlFor="recurring-toggle" className="flex items-center space-x-3 cursor-pointer w-full">
             <div 
-              className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors duration-300 ${isRecurring ? 'bg-green-500' : 'bg-gray-300'}`}
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${isRecurring ? 'bg-indigo-500' : 'bg-gray-300'}`}
               onClick={(e) => {
                 e.preventDefault();
                 const newValue = !isRecurring;
@@ -196,12 +198,25 @@ export default function ShiftBoxMenu({
               }}
             >
               <motion.div 
-                className="bg-white w-3.5 h-3.5 rounded-full shadow-md" 
-                animate={{ x: isRecurring ? 20 : 0 }}
+                className="bg-white w-4 h-4 rounded-full shadow-md flex items-center justify-center" 
+                animate={{ 
+                  x: isRecurring ? 19 : 0,
+                  backgroundColor: isRecurring ? "#ffffff" : "#ffffff"
+                }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
+              >
+                {isRecurring && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-indigo-500 flex items-center justify-center"
+                  >
+                    <TbCircleCheck size={10} />
+                  </motion.span>
+                )}
+              </motion.div>
             </div>
-            <span className="text-sm font-medium text-gray-700">Recurring Shift</span>
+            <span className="text-sm font-medium text-gray-800">Recurring Shift</span>
           </label>
           <input 
             type="checkbox" 
@@ -218,18 +233,18 @@ export default function ShiftBoxMenu({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="space-y-4"
+            className="space-y-5"
           >
             {/* Frequency */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label className="flex items-center text-xs font-medium text-gray-500">
-                <FiCalendar className="mr-1.5" size={12} />
+                <FiCalendar className="mr-2" size={14} />
                 Frequency
               </label>
               <select
                 value={frequency}
                 onChange={handleFrequencyChange}
-                className="w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full border border-gray-300 rounded-lg py-2 px-3 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all"
               >
                 <option value="NONE">None</option>
                 <option value="DAILY">Daily</option>
@@ -239,20 +254,20 @@ export default function ShiftBoxMenu({
             </div>
 
             {/* Interval */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label className="flex items-center text-xs font-medium text-gray-500">
-                <FiClock className="mr-1.5" size={12} />
-                Repeat every
+                <FiClock className="mr-2" size={14} />
+                Repeat Every
               </label>
-              <div className="flex items-center">
+              <div className="flex items-center bg-gray-50 border border-gray-300 rounded-lg overflow-hidden">
                 <input
                   type="number"
                   min="1"
                   value={interval}
                   onChange={handleIntervalChange}
-                  className="w-16 border border-gray-300 rounded-md py-1.5 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-16 bg-transparent border-0 py-2 px-3 text-sm focus:outline-none focus:ring-0 text-center"
                 />
-                <span className="ml-2 text-sm text-gray-600">
+                <span className="flex-1 px-3 text-sm text-gray-600 font-medium border-l border-gray-300">
                   {frequency === "DAILY" && "day(s)"}
                   {frequency === "WEEKLY" && "week(s)"}
                   {frequency === "MONTHLY" && "month(s)"}
@@ -266,20 +281,21 @@ export default function ShiftBoxMenu({
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="space-y-1.5"
+                className="space-y-2"
               >
                 <label className="flex items-center text-xs font-medium text-gray-500">
-                  On these days
+                  <TbCalendarTime className="mr-2" size={14} />
+                  Days of Week
                 </label>
-                <div className="flex justify-between flex-wrap gap-1">
+                <div className="flex justify-between gap-1 pt-1">
                   {DAYS_OF_WEEK.map((day) => (
                     <button
                       key={day.value}
                       onClick={() => handleDaySelection(day.value)}
-                      className={`w-8 h-8 rounded-full text-xs font-medium transition-all
+                      className={`w-9 h-9 rounded-lg text-xs font-medium transition-all
                         ${selectedDays.includes(day.value) 
-                          ? 'bg-blue-500 text-white shadow-sm' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                          ? 'bg-indigo-500 text-white shadow-sm' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                     >
                       {day.label.substring(0, 1)}
                     </button>
@@ -289,12 +305,16 @@ export default function ShiftBoxMenu({
             )}
 
             {/* Summary */}
-            <div className="mt-4 pt-3 border-t border-gray-100">
-              <div className="text-xs text-gray-500 font-medium">Summary</div>
-              <div className="text-sm text-gray-800 mt-1">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-5 pt-4 border-t border-gray-200 bg-indigo-50/50 -mx-5 -mb-5 px-5 py-3 rounded-b-xl"
+            >
+              <div className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1.5">Summary</div>
+              <div className="text-sm text-gray-800 font-medium">
                 {getFrequencyDescription()}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </div>

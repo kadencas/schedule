@@ -16,7 +16,7 @@ export default function EmployeeTimeline({
   selectedDay,
 }: EmployeeTimelineProps) {
   const snapToGrid = true;
-  const grid_height = 45; // More compact height
+  const grid_height = 40; // Even more compact height
   const readOnly = true;
 
   // Memoize the processed shifts to avoid new references on every render
@@ -48,46 +48,40 @@ export default function EmployeeTimeline({
   const hasActivities = matchingShift && matchingShift.segments && matchingShift.segments.length > 0;
 
   return (
-    <div className="relative overflow-visible flex items-stretch pt-0 pb-4">
-      {/* Left side with employee info */}
-      <div className="w-[75px] flex-shrink-0 border-r border-gray-100 pr-1 pt-0">
-        <div className="flex flex-col h-full justify-start">
-          {/* Employee color and name */}
-          <div className="flex items-start mb-0.5 w-full">
+    <div className="relative overflow-visible flex items-stretch">
+      {/* Left side with employee info - minimalist version */}
+      <div className="w-[70px] flex-shrink-0 pr-2">
+        <div className="flex flex-col">
+          <div className="flex items-center">
             <div 
-              className="w-2.5 h-2.5 rounded-full mr-1 flex-shrink-0 mt-0.5" 
+              className="w-2 h-2 rounded-full mr-1.5 flex-shrink-0" 
               style={{ backgroundColor: '#60a5fa' }}
             />
-            <div className="flex flex-col">
-              <span className="font-medium text-gray-800 text-[12px] leading-tight max-w-[65px]">
-                {employee.name}
-              </span>
-              
-              {/* Department (if available) */}
-              {employee.department && (
-                <div className="flex items-center">
-                  <FiBriefcase className="text-gray-400 mr-0.5" size={7} />
-                  <span className="text-[9px] text-gray-500">
-                    {employee.department}
-                  </span>
-                </div>
-              )}
-              
-              {/* Location (if available) */}
-              {employee.location && (
-                <div className="flex items-center">
-                  <FiMapPin className="text-gray-400 mr-0.5" size={7} />
-                  <span className="text-[9px] text-gray-500">
-                    {employee.location}
-                  </span>
-                </div>
-              )}
-            </div>
+            <span className="font-medium text-gray-700 text-xs truncate">
+              {employee.name}
+            </span>
+          </div>
+          
+          {/* Department and location as simple text */}
+          <div className="ml-3.5 mt-0.5">
+            {employee.department && (
+              <div className="text-[9px] text-gray-500 flex items-center">
+                <FiBriefcase className="text-gray-400 mr-1" size={7} />
+                <span className="truncate max-w-[55px]">{employee.department}</span>
+              </div>
+            )}
+            
+            {employee.location && (
+              <div className="text-[9px] text-gray-500 flex items-center">
+                <FiMapPin className="text-gray-400 mr-1" size={7} />
+                <span className="truncate max-w-[55px]">{employee.location}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
       
-      {/* Timeline area */}
+      {/* Timeline area - minimalist version */}
       <div className="flex-1 overflow-visible relative">
         <Timeline
           user={employee.name}
@@ -105,12 +99,12 @@ export default function EmployeeTimeline({
           entities={[]} // Empty array as entities are not needed in this view
         />
         
-        {/* Empty state message */}
+        {/* Minimalist empty state */}
         {!hasActivities && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-            <div className="text-center">
-              <FiCalendar className="mx-auto text-gray-300 mb-0.5" size={8} />
-              <p className="text-[7px] text-gray-500">No activities</p>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center opacity-40">
+              <FiCalendar className="mx-auto text-gray-300" size={12} />
+              <p className="text-[8px] text-gray-400 mt-0.5">No schedule</p>
             </div>
           </div>
         )}

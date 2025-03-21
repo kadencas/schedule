@@ -36,7 +36,7 @@ interface MyScheduleTabProps {
 export default function MyScheduleTab({ employeeData, userName, localizer }: MyScheduleTabProps) {
   const [selectedView, setSelectedView] = useState<"schedule" | "details">("schedule");
   const [showNextShifts, setShowNextShifts] = useState(true);
-  
+
   const today = new Date();
   
   // Move all hooks to the top, with null checks inside
@@ -96,24 +96,24 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
     if (!employeeData?.shifts) return [];
     
     return employeeData.shifts
-      .filter((shift) => {
-        const shiftDate = new Date(shift.startTime);
+    .filter((shift) => {
+      const shiftDate = new Date(shift.startTime);
         // Get shifts from today (if not already working that shift) until 7 days from now
-        return (
+      return (
           ((isToday(shiftDate) && !isCurrentlyWorking) || isAfter(shiftDate, today)) &&
           isBefore(shiftDate, addDays(today, 7))
         );
       })
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
       .slice(0, 5) // Limit to 5 shifts
-      .map((shift) => ({
+    .map((shift) => ({
         date: formatNextShiftDate(new Date(shift.startTime)),
         day: format(new Date(shift.startTime), "EEE"),
         fullDate: new Date(shift.startTime),
-        shift: `${format(new Date(shift.startTime), "h:mm a")} - ${format(
-          new Date(shift.endTime),
-          "h:mm a"
-        )}`,
+      shift: `${format(new Date(shift.startTime), "h:mm a")} - ${format(
+        new Date(shift.endTime),
+        "h:mm a"
+      )}`,
         segments: shift.segments || [],
         duration: differenceInMinutes(new Date(shift.endTime), new Date(shift.startTime)) / 60
       }));
@@ -207,7 +207,7 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
           </div>
         </div>
       </motion.div>
-      
+
       {/* View Selector */}
       <div className="flex justify-center mb-6">
         <div className="bg-gray-100 rounded-full p-1 inline-flex">
@@ -245,9 +245,9 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {/* Current Status Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className={`rounded-xl shadow-sm p-5 ${
                   isCurrentlyWorking 
@@ -296,12 +296,12 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
                     </div>
                   </div>
                 )}
-              </motion.div>
-              
+        </motion.div>
+
               {/* Next Shift Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
                 className="bg-white rounded-xl shadow-sm p-5 border border-gray-100"
               >
@@ -358,8 +358,8 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
                     <FiCalendar size={24} className="text-gray-300 mx-auto mb-2" />
                     <p className="text-gray-500">No upcoming shifts scheduled</p>
                   </div>
-                )}
-              </motion.div>
+          )}
+        </motion.div>
               
               {/* Shift Summary Card */}
               <motion.div
@@ -395,8 +395,8 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
                   </div>
                 </div>
               </motion.div>
-            </div>
-            
+      </div>
+
             {/* Schedule Builder Component - Added here */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -414,21 +414,21 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
             </motion.div>
             
             {/* Calendar Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.5 }}
               className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6"
-            >
+      >
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Monthly Calendar</h2>
               <div className="calendar-container" style={{ height: 500 }}>
-                <Calendar
-                  localizer={localizer}
+        <Calendar
+          localizer={localizer}
                   events={calendarEvents}
-                  startAccessor="start"
-                  endAccessor="end"
+          startAccessor="start"
+          endAccessor="end"
                   views={["month", "week", "day"]}
-                  popup
+          popup
                   className="modern-calendar"
                 />
               </div>
@@ -539,7 +539,7 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
                 </div>
               </div>
             </div>
-          </motion.div>
+      </motion.div>
         )}
       </AnimatePresence>
       

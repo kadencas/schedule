@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactDOM from "react-dom";
 import Draggable, { DraggableEvent, DraggableData } from "react-draggable";
 import { ResizableBox } from "react-resizable";
@@ -61,6 +61,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null!);
   const editButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   
   // Track the actual pixel position (not snapped)
   const [position, setPosition] = useState({ x: 0, y: 4 });
@@ -197,11 +198,29 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
     }
   };
 
-  const rect = editButtonRef.current?.getBoundingClientRect();
-  const popupStyle = {
-    top: rect ? rect.bottom + window.scrollY : 0,
-    left: rect ? rect.left + window.scrollX : 0,
-  };
+  // Update menu position - run this whenever the menu is shown or when scrolling
+  const updateMenuPosition = useCallback(() => {
+    if (!editButtonRef.current || !menuRef.current) return;
+    
+    const rect = editButtonRef.current.getBoundingClientRect();
+    menuRef.current.style.top = `${rect.bottom + window.scrollY}px`;
+    menuRef.current.style.left = `${rect.left + window.scrollX}px`;
+  }, []);
+
+  // Add scroll event listener when menu is open
+  useEffect(() => {
+    if (showEditor) {
+      // Initial position update
+      setTimeout(updateMenuPosition, 0);
+      
+      // Update on scroll
+      window.addEventListener('scroll', updateMenuPosition, true);
+      
+      return () => {
+        window.removeEventListener('scroll', updateMenuPosition, true);
+      };
+    }
+  }, [showEditor, updateMenuPosition]);
 
   // Calculate segment's start and end times
   let segmentStartTimeStr: string | undefined;
@@ -373,7 +392,8 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
             {showEditor && !readOnly &&
               ReactDOM.createPortal(
                 <SegmentEditorMenu
-                  popupStyle={popupStyle}
+                  ref={menuRef}
+                  initialPopupStyle={{position: "absolute", zIndex: 1000}}
                   localLabel={localLabel}
                   onLabelChange={setLocalLabel}
                   localColor={localColor}

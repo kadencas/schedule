@@ -55,7 +55,7 @@ export function useEntityShiftManagement(
         }
       });
     }
-    
+
     // Helper function: checks if a shift occurs on the selected date (handling recurrence).
     function doesShiftOccurOn(shift: Shift, date: Date): boolean {
       // ENHANCED RECURRENCE DETECTION
@@ -281,51 +281,51 @@ export function useEntityShiftManagement(
 
       // Process for display if we have segments
       if (combinedShift.segments.length > 0) {
-        const shiftStart = new Date(combinedShift.startTime);
-        const mappedSegments = combinedShift.segments.map((seg: any) => {
-          const segStart = new Date(seg.startTime);
-          const segEnd = new Date(seg.endTime);
-          const startMinutes = Math.round(
-            (segStart.getTime() - shiftStart.getTime()) / 60000
-          );
-          const endMinutes = Math.round(
-            (segEnd.getTime() - shiftStart.getTime()) / 60000
-          );
+      const shiftStart = new Date(combinedShift.startTime);
+      const mappedSegments = combinedShift.segments.map((seg: any) => {
+        const segStart = new Date(seg.startTime);
+        const segEnd = new Date(seg.endTime);
+        const startMinutes = Math.round(
+          (segStart.getTime() - shiftStart.getTime()) / 60000
+        );
+        const endMinutes = Math.round(
+          (segEnd.getTime() - shiftStart.getTime()) / 60000
+        );
           
           // Include the user in the mapped segment
-          return {
-            id: seg.id,
-            label: seg.segmentType,
-            start: startMinutes,
-            end: endMinutes,
-            color: seg.color,
-            location: seg.location,
+        return {
+          id: seg.id,
+          label: seg.segmentType,
+          start: startMinutes,
+          end: endMinutes,
+          color: seg.color,
+          location: seg.location,
             entity: seg.entities || seg.entity,
             user: seg.user  // Pass through the user name
-          } as Segment;
-        });
+        } as Segment;
+      });
         
-        setShiftSegments(mappedSegments);
+      setShiftSegments(mappedSegments);
 
         // Compute visualization values (timeline positions)
-        const shiftEnd = new Date(combinedShift.endTime);
-        const baseline = new Date(shiftStart);
-        baseline.setHours(9, 0, 0, 0);
-        const diffStartMinutes = (shiftStart.getTime() - baseline.getTime()) / 60000;
-        const initialX = diffStartMinutes / 0.6;
-        const diffShiftMinutes = (shiftEnd.getTime() - shiftStart.getTime()) / 60000;
-        const initialWidth = diffShiftMinutes / 0.6;
-        const computedShiftStartTime = new Date(baseline.getTime() + initialX * 0.6 * 60000);
-        const computedShiftEndTime = new Date(baseline.getTime() + (initialX + initialWidth) * 0.6 * 60000);
+      const shiftEnd = new Date(combinedShift.endTime);
+      const baseline = new Date(shiftStart);
+      baseline.setHours(9, 0, 0, 0);
+      const diffStartMinutes = (shiftStart.getTime() - baseline.getTime()) / 60000;
+      const initialX = diffStartMinutes / 0.6;
+      const diffShiftMinutes = (shiftEnd.getTime() - shiftStart.getTime()) / 60000;
+      const initialWidth = diffShiftMinutes / 0.6;
+      const computedShiftStartTime = new Date(baseline.getTime() + initialX * 0.6 * 60000);
+      const computedShiftEndTime = new Date(baseline.getTime() + (initialX + initialWidth) * 0.6 * 60000);
 
-        setShiftTimes({
-          matchingShift: combinedShift,
-          shiftStartTime: computedShiftStartTime,
-          shiftEndTime: computedShiftEndTime,
-          initialX,
-          initialWidth,
-        });
-      } else {
+      setShiftTimes({
+        matchingShift: combinedShift,
+        shiftStartTime: computedShiftStartTime,
+        shiftEndTime: computedShiftEndTime,
+        initialX,
+        initialWidth,
+      });
+    } else {
         // Empty entity shift - no segments found
         const shiftStart = new Date(primaryEntityShift.startTime);
         const shiftEnd = new Date(primaryEntityShift.endTime);

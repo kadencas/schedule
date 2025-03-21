@@ -30,7 +30,7 @@ const localizer = dateFnsLocalizer({
 
 export default function Dashboard() {
   const [activeMainTab, setActiveMainTab] = useState<"me" | "peopleSchedule" | "tagSchedule" | "management">("me");
-  const [activeSubTab, setActiveSubTab] = useState<"mySchedule" | "scheduleEditor" | "viewDay" | "viewWeek" | "tagsSchedule" | "people" | "tags">("mySchedule");
+  const [activeSubTab, setActiveSubTab] = useState<"mySchedule" | "viewDay" | "viewWeek" | "tagsSchedule" | "people" | "tags">("mySchedule");
   const { data: session, status } = useSession();
   const userName = session?.user?.name || "Employee";
 
@@ -196,16 +196,6 @@ export default function Dashboard() {
                 >
                   My Schedule
                 </button>
-                <button
-                  onClick={() => setActiveSubTab("scheduleEditor")}
-                  className={`px-4 py-1.5 rounded-md font-medium text-sm focus:outline-none transition-all duration-200 ${
-                    activeSubTab === "scheduleEditor"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-600 hover:text-blue-500"
-                  }`}
-                >
-                  Schedule Editor
-                </button>
               </>
             )}
             {activeMainTab === "peopleSchedule" && (
@@ -276,7 +266,6 @@ export default function Dashboard() {
         {/* Tab Content */}
         <div className="p-6 w-full">
           {activeSubTab === "mySchedule" && (<MyScheduleTab employeeData={employeeData} userName={userName} localizer={localizer} />)}
-          {activeSubTab === "scheduleEditor" && <ViewScheduleBuilder />}
           {activeSubTab === "viewDay" && <ViewDayTab />}
           {activeSubTab === "viewWeek" && <ViewWeekTab />}
           {activeSubTab === "tagsSchedule" && <ViewEntitiesScheduleTab />}
