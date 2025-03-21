@@ -3,7 +3,6 @@ import Timeline from "@/app/individual-schedule-builder/components/timeline";
 import { Entity } from "@/types/types";
 import { useEntityShiftManagement } from "./useEntityShiftManagement";
 import { FiCalendar } from "react-icons/fi";
-import styles from "@/app/individual-schedule-builder/styles/Timeline.module.css";
 
 interface EntityTimelineProps {
   entity: Entity;
@@ -86,8 +85,8 @@ export default function EntityTimeline({
         </div>
       </div>
       
-      {/* Timeline area with alignment classes */}
-      <div className={`flex-1 overflow-visible relative ${styles.allScheduleViewTimeline} ${styles.globalHourMarkerAlignment}`}>
+      {/* Timeline area */}
+      <div className="flex-1 overflow-visible relative">
         <Timeline
           snapToGrid={snapToGrid}
           shiftSegments={shiftSegments}
