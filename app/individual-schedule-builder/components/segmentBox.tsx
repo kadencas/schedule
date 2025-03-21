@@ -251,7 +251,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
   // Create a lighter version of the color for the background
   const getBackgroundColor = () => {
     if (!localColor || localColor === '#ffffff' || localColor === 'white') {
-      return 'rgba(255, 255, 255, 0.9)';
+      return 'rgba(255, 255, 255, 1.0)';
     }
     
     // Extract RGB from hex color
@@ -260,7 +260,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
     const b = parseInt(localColor.substring(5, 7), 16);
     
     // Return a semi-transparent version with reduced opacity
-    return `rgba(${r}, ${g}, ${b}, 0.85)`;
+    return `rgba(${r}, ${g}, ${b}, 1.0)`;
   };
 
   // Create a darker version of the color for the border
@@ -314,7 +314,7 @@ const SegmentBox: React.FC<SegmentBoxProps> = ({
           draggableOpts={{ disabled: isDragging }}
         >
           <div
-            className="w-full h-full rounded-md shadow-sm border backdrop-blur-[2px] flex flex-col justify-between p-1 relative cursor-move transition-all duration-150"
+            className="w-full h-full rounded-md shadow-sm border flex flex-col justify-between p-1 relative cursor-move transition-all duration-150"
             style={{ 
               backgroundColor: getBackgroundColor(),
               borderColor: getBorderColor(),

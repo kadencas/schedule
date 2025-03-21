@@ -189,17 +189,17 @@ export default function EntitiesPage() {
             </p>
           </div>
           
-          <div className="mt-4 sm:mt-0 space-x-2">
+          <div className="mt-4 sm:mt-0 flex items-center">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="bg-white/20 hover:bg-white/30 text-white py-2 px-3 rounded-lg text-sm font-medium backdrop-blur-sm transition duration-200 flex items-center"
+              className="bg-white/20 hover:bg-white/30 text-white py-2 px-3.5 rounded-lg text-sm font-medium backdrop-blur-sm transition duration-200 flex items-center mr-3"
             >
               <LuFilter className="mr-1.5" />
               Filter
             </button>
             <button
               onClick={() => setIsFormOpen(true)}
-              className="bg-white hover:bg-opacity-90 text-indigo-700 py-2 px-3 rounded-lg text-sm font-medium transition duration-200 flex items-center"
+              className="bg-white hover:bg-opacity-90 text-indigo-700 py-2 px-3.5 rounded-lg text-sm font-medium transition duration-200 flex items-center"
             >
               <FiPlus className="mr-1.5" />
               New Tag

@@ -244,157 +244,9 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
             transition={{ duration: 0.3 }}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              {/* Current Status Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className={`rounded-xl shadow-sm p-5 ${
-                  isCurrentlyWorking 
-                    ? "bg-green-50 border border-green-100" 
-                    : "bg-white border border-gray-100"
-                }`}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    {isCurrentlyWorking ? "Currently Working" : "Today's Status"}
-                  </h2>
-                  {isCurrentlyWorking ? (
-                    <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium flex items-center">
-                      <FiCheck className="mr-1" size={12} />
-                      Active
-                    </span>
-                  ) : todaysShift ? (
-                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium flex items-center">
-                      <FiClock className="mr-1" size={12} />
-                      Scheduled
-                    </span>
-                  ) : (
-                    <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium flex items-center">
-                      <FiInfo className="mr-1" size={12} />
-                      Off
-                    </span>
-                  )}
-                </div>
-                
-                <div className="mb-4">
-                  <div className="text-sm text-gray-500 mb-1">
-                    {isCurrentlyWorking ? "Current Shift" : "Today"}
-                  </div>
-                  <div className="text-xl font-semibold text-gray-800 flex items-center">
-                    <FiClock className="mr-2 text-gray-400" size={18} />
-                    {currentShiftTime}
-                  </div>
-                </div>
-                
-                {isCurrentlyWorking && timeRemainingInShift && (
-                  <div className="mt-4 bg-white rounded-lg p-3 border border-green-100">
-                    <div className="text-sm text-gray-500 mb-1">Remaining Time</div>
-                    <div className="flex items-center text-green-700 font-semibold">
-                      <FiArrowRight className="mr-2" />
-                      {timeRemainingInShift.hours}h {timeRemainingInShift.minutes}m
-                    </div>
-                  </div>
-                )}
-        </motion.div>
 
-              {/* Next Shift Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-                className="bg-white rounded-xl shadow-sm p-5 border border-gray-100"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">Next Shift</h2>
-                  <button
-                    onClick={() => setShowNextShifts(!showNextShifts)}
-                    className="text-blue-500 hover:text-blue-700 text-sm font-medium flex items-center"
-                  >
-                    {showNextShifts ? "Hide" : "View"} more
-                    {showNextShifts ? <FiChevronLeft size={16} className="ml-1" /> : <FiChevronRight size={16} className="ml-1" />}
-                  </button>
-                </div>
-                
-                {nextShift ? (
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">
-                      {formatNextShiftDate(new Date(nextShift.startTime))}
-                    </div>
-                    <div className="text-xl font-semibold text-gray-800 flex items-center">
-                      <FiCalendar className="mr-2 text-gray-400" size={18} />
-                      {format(new Date(nextShift.startTime), "h:mm a")} - {format(new Date(nextShift.endTime), "h:mm a")}
-                    </div>
-                    
-                    <AnimatePresence>
-                      {showNextShifts && upcomingShifts.length > 1 && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mt-4 pt-4 border-t border-gray-100"
-                        >
-                          <div className="text-sm font-medium text-gray-700 mb-2">Upcoming Shifts</div>
-                          <div className="space-y-2">
-                            {upcomingShifts.slice(1).map((shift, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-sm">
-                                <div className="flex items-center">
-                                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center mr-2">
-                                    {shift.day.charAt(0)}
-                                  </div>
-                                  <span className="text-gray-700">{shift.date}</span>
-                                </div>
-                                <span className="text-gray-600 font-medium">{shift.shift}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <FiCalendar size={24} className="text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500">No upcoming shifts scheduled</p>
-                  </div>
-          )}
-        </motion.div>
-              
-              {/* Shift Summary Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
-                className="bg-white rounded-xl shadow-sm p-5 border border-gray-100"
-              >
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Weekly Summary</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Total Hours</div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      {thisWeekHours.toFixed(1)} hours
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Shifts This Week</div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      {upcomingShifts.length} shifts
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">Average Shift Length</div>
-                    <div className="text-xl font-semibold text-gray-800">
-                      {upcomingShifts.length > 0 
-                        ? (upcomingShifts.reduce((acc, shift) => acc + shift.duration, 0) / upcomingShifts.length).toFixed(1) 
-                        : 0} hours
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+
+
       </div>
 
             {/* Schedule Builder Component - Added here */}
@@ -404,10 +256,6 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
               transition={{ duration: 0.3, delay: 0.4 }}
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6"
             >
-              <h2 className="text-lg font-semibold text-gray-800 px-5 py-4 border-b border-gray-100 flex items-center">
-                <FiEdit size={16} className="mr-2 text-blue-500" />
-                Schedule Builder
-              </h2>
               <div className="schedule-builder-container">
                 <ScheduleBuilderComponent />
               </div>
@@ -613,15 +461,23 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
           margin: 0;
         }
         
-        /* Fix spacing in the schedule builder */
+        /* Remove padding from the schedule builder */
         .schedule-builder-container :global(.py-6) {
-          padding-top: 1rem;
+          padding-top: 0;
           padding-bottom: 0;
         }
         
-        /* Ensure the timeline doesn't create extra space */
+        /* Remove space between elements */
         .schedule-builder-container :global(.flex.flex-col.space-y-6) {
           margin-bottom: 0;
+          gap: 1rem;
+          margin-top: 0;
+        }
+        
+        /* Remove extra padding from the week toggle component */
+        .schedule-builder-container :global(.bg-white.rounded-xl.shadow-sm.p-4.border.border-gray-100) {
+          padding-top: 0.75rem;
+          padding-bottom: 0.75rem;
         }
       `}</style>
     </div>

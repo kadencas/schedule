@@ -9,6 +9,7 @@ import {
   getMostRecentMonday,
   getNextWeekMonday,
   getPreviousWeekMonday,
+  days,
 } from "@/app/individual-schedule-builder/helper/helper";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiSearch, FiFilter, FiInfo, FiX } from "react-icons/fi";
@@ -73,7 +74,7 @@ const TimelineHeader = () => {
                 
                 {/* Hour label */}
                 <div
-                  className="absolute transform -translate-x-1/2 text-[7px] text-gray-500 font-medium"
+                  className="absolute transform -translate-x-1/2 text-[10px] text-gray-500 font-medium"
                   style={{ 
                     left: leftPos,
                     top: '0px',
@@ -100,6 +101,81 @@ export default function Page() {
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+  
+  // Animation state
+  const [direction, setDirection] = useState<"left" | "right" | null>(null);
+  const [animationKey, setAnimationKey] = useState(0);
+
+  // Update the selectedDay handler to include animation
+  const handleDayChange = (day: string) => {
+    // Determine direction based on current and new day
+    const currentIndex = days.indexOf(selectedDay);
+    const newIndex = days.indexOf(day);
+    
+    if (currentIndex !== -1 && newIndex !== -1) {
+      setDirection(newIndex > currentIndex ? "left" : "right");
+    } else {
+      setDirection("right"); // Default direction
+    }
+    
+    setAnimationKey(prev => prev + 1);
+    setSelectedDay(day);
+  };
+
+  // Week navigation with animation
+  const handlePreviousWeek = () => {
+    setDirection("right");
+    setAnimationKey(prev => prev + 1);
+    setCurrentMonday(getPreviousWeekMonday(currentMonday));
+  };
+
+  const handleNextWeek = () => {
+    setDirection("left");
+    setAnimationKey(prev => prev + 1);
+    setCurrentMonday(getNextWeekMonday(currentMonday));
+  };
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 1 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.05,
+        delayChildren: 0.05
+      }
+    },
+    exit: {
+      opacity: 0,
+      transition: { 
+        staggerChildren: 0.05,
+        staggerDirection: -1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: (direction: "left" | "right" | null) => ({
+      x: direction === "left" ? 30 : direction === "right" ? -30 : 0,
+      opacity: 0
+    }),
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        x: { type: "spring", stiffness: 300, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
+    },
+    exit: (direction: "left" | "right" | null) => ({
+      x: direction === "left" ? -30 : direction === "right" ? 30 : 0,
+      opacity: 0,
+      transition: {
+        x: { duration: 0.2 },
+        opacity: { duration: 0.2 }
+      }
+    })
+  };
 
   // Get unique departments for the filter
   const uniqueDepartments = useMemo(() => {
@@ -114,14 +190,6 @@ export default function Page() {
     
     return Array.from(departments).sort();
   }, [employees]);
-
-  const handlePreviousWeek = () => {
-    setCurrentMonday(getPreviousWeekMonday(currentMonday));
-  };
-
-  const handleNextWeek = () => {
-    setCurrentMonday(getNextWeekMonday(currentMonday));
-  };
 
   const formattedMondayDate = formatMondayDate(currentMonday);
 
@@ -179,132 +247,142 @@ export default function Page() {
           handlePreviousWeek={handlePreviousWeek}
           handleNextWeek={handleNextWeek}
           selectedDay={selectedDay}
-          setSelectedDay={setSelectedDay}
+          setSelectedDay={handleDayChange}
         />
       </div>
       
-      {/* Search and Filter */}
-      <div className="bg-white rounded-xl shadow-sm mb-1 p-2">
-        <div className="flex items-center gap-2">
-          {/* Search */}
-          <div className="relative flex-grow sm:max-w-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="text-gray-400" />
+      {/* Combined Search/Filter and Timelines Container */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Search and Filter */}
+        <div className="p-2">
+          <div className="flex items-center gap-2">
+            {/* Search */}
+            <div className="relative flex-grow sm:max-w-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiSearch className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search employees..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search employees..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-          
-          {/* Filter button */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-              className={`p-2 rounded-md ${departmentFilter ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} flex items-center`}
-              title="Filter by department"
-            >
-              <FiFilter size={16} />
-              {departmentFilter && (
-                <span className="ml-1 text-xs font-medium hidden sm:inline">
-                  {departmentFilter}
-                </span>
-              )}
-            </button>
             
-            {/* Filter dropdown */}
-            {showDepartmentFilter && (
-              <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 w-48 py-1">
-                <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
-                  Filter by Department
-                </div>
-                
+            {/* Filter button */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
+                className={`p-2 rounded-md ${departmentFilter ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} flex items-center`}
+                title="Filter by department"
+              >
+                <FiFilter size={16} />
                 {departmentFilter && (
-                  <button 
-                    onClick={clearDepartmentFilter}
-                    className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                  >
-                    <FiX size={14} className="mr-2" />
-                    Clear Filter
-                  </button>
+                  <span className="ml-1 text-xs font-medium hidden sm:inline">
+                    {departmentFilter}
+                  </span>
                 )}
-                
-                {uniqueDepartments.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-gray-500">
-                    No departments available
+              </button>
+              
+              {/* Filter dropdown */}
+              {showDepartmentFilter && (
+                <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 w-48 py-1">
+                  <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-100">
+                    Filter by Department
                   </div>
-                ) : (
-                  uniqueDepartments.map(department => (
-                    <button
-                      key={department}
-                      onClick={() => {
-                        setDepartmentFilter(department);
-                        setShowDepartmentFilter(false);
-                      }}
-                      className={`px-3 py-2 text-sm w-full text-left hover:bg-gray-50 ${department === departmentFilter ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
+                  
+                  {departmentFilter && (
+                    <button 
+                      onClick={clearDepartmentFilter}
+                      className="flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                     >
-                      {department}
+                      <FiX size={14} className="mr-2" />
+                      Clear Filter
                     </button>
-                  ))
-                )}
+                  )}
+                  
+                  {uniqueDepartments.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      No departments available
+                    </div>
+                  ) : (
+                    uniqueDepartments.map(department => (
+                      <button
+                        key={department}
+                        onClick={() => {
+                          setDepartmentFilter(department);
+                          setShowDepartmentFilter(false);
+                        }}
+                        className={`px-3 py-2 text-sm w-full text-left hover:bg-gray-50 ${department === departmentFilter ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}`}
+                      >
+                        {department}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Active filter indicator */}
+            {departmentFilter && (
+              <div className="flex items-center text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-1">
+                <span className="mr-1">{departmentFilter}</span>
+                <button 
+                  onClick={clearDepartmentFilter}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <FiX size={14} />
+                </button>
               </div>
             )}
           </div>
-          
-          {/* Active filter indicator */}
-          {departmentFilter && (
-            <div className="flex items-center text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-1">
-              <span className="mr-1">{departmentFilter}</span>
-              <button 
-                onClick={clearDepartmentFilter}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                <FiX size={14} />
-              </button>
+        </div>
+        
+        {/* Employee Timelines - Minimalistic Version */}
+        <div className="p-2">
+          {filteredEmployees.length === 0 ? (
+            <div className="text-center py-6">
+              <FiInfo size={40} className="mx-auto text-gray-300 mb-2" />
+              <h3 className="text-gray-600 font-medium mb-1">No employees found</h3>
+              <p className="text-sm text-gray-500">
+                {departmentFilter ? `No ${departmentFilter} employees found.` : 'Try a different search term'}
+                {departmentFilter && ' Try clearing your filter.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-visible space-y-1">
+              {/* Add TimelineHeader above the first timeline */}
+              <TimelineHeader />
+              
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={`timeline-container-${selectedDay}-${animationKey}`}
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="space-y-1 overflow-visible"
+                >
+                  {filteredEmployees.map((employee: Employee, index: number) => (
+                    <motion.div
+                      key={`${employee.id}-${selectedDay}`}
+                      custom={direction}
+                      variants={itemVariants}
+                      className="bg-white overflow-visible pt-2"
+                    >
+                      <EmployeeTimeline
+                        employee={employee}
+                        currentMonday={currentMonday}
+                        selectedDay={selectedDay}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
             </div>
           )}
         </div>
-      </div>
-      
-      {/* Employee Timelines - Minimalistic Version */}
-      <div className="bg-white rounded-lg p-1">
-        {filteredEmployees.length === 0 ? (
-          <div className="text-center py-6">
-            <FiInfo size={40} className="mx-auto text-gray-300 mb-2" />
-            <h3 className="text-gray-600 font-medium mb-1">No employees found</h3>
-            <p className="text-sm text-gray-500">
-              {departmentFilter ? `No ${departmentFilter} employees found.` : 'Try a different search term'}
-              {departmentFilter && ' Try clearing your filter.'}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-visible space-y-1">
-            {/* Add TimelineHeader above the first timeline */}
-            <TimelineHeader />
-            
-            <AnimatePresence>
-              {filteredEmployees.map((employee: Employee, index: number) => (
-                <motion.div
-                  key={`${employee.id}-${selectedDay}`}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="bg-white overflow-visible pt-2"
-                >
-                  <EmployeeTimeline
-                    employee={employee}
-                    currentMonday={currentMonday}
-                    selectedDay={selectedDay}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
       </div>
     </div>
   );
