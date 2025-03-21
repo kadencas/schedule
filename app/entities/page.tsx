@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
 
 // Icons
 import { LuLampDesk, LuBookOpen, LuClock, LuPlus, LuFilter, LuX } from "react-icons/lu";
@@ -11,6 +12,9 @@ import { BiSortZA } from "react-icons/bi";
 import { MdToys, MdBlock } from "react-icons/md";
 import { FiPlus, FiMinus, FiInfo, FiTag, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { Entity } from "@/types/types";
+
+// Array of roles that can add tags
+const ADMIN_ROLES = ["SUPER_ADMIN", "COMPANY_ADMIN", "MANAGER", "TEAM_LEAD"];
 
 // Map icon names to the actual components
 const iconMap = {
@@ -47,6 +51,14 @@ const cardVariants = {
 };
 
 export default function EntitiesPage() {
+  // Get session data for role-based access control
+  const { data: session, status } = useSession();
+  
+  // Check if user has permission to add tags
+  const canAddTags = Boolean(
+    session?.user?.role && ADMIN_ROLES.includes(session.user.role)
+  );
+
   const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -163,6 +175,15 @@ export default function EntitiesPage() {
     setShowFilters(false);
   };
 
+  // Show loading state
+  if (loading || status === "loading") {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto">
       {/* Hero Section */}
@@ -197,13 +218,16 @@ export default function EntitiesPage() {
               <LuFilter className="mr-1.5" />
               Filter
             </button>
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="bg-white hover:bg-opacity-90 text-indigo-700 py-2 px-3.5 rounded-lg text-sm font-medium transition duration-200 flex items-center"
-            >
-              <FiPlus className="mr-1.5" />
-              New Tag
-            </button>
+            {/* Only show New Tag button for users with permission */}
+            {canAddTags && (
+              <button
+                onClick={() => setIsFormOpen(true)}
+                className="bg-white hover:bg-opacity-90 text-indigo-700 py-2 px-3.5 rounded-lg text-sm font-medium transition duration-200 flex items-center"
+              >
+                <FiPlus className="mr-1.5" />
+                New Tag
+              </button>
+            )}
           </div>
         </div>
       </motion.div>

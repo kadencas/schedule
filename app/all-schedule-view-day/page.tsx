@@ -12,9 +12,13 @@ import {
   days,
 } from "@/app/individual-schedule-builder/helper/helper";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiSearch, FiFilter, FiInfo, FiX, FiEdit, FiEye } from "react-icons/fi";
+import { FiSearch, FiFilter, FiInfo, FiX, FiEdit, FiEye, FiLock } from "react-icons/fi";
 import { Employee } from "@/types/types";
 import styles from "@/app/individual-schedule-builder/styles/Timeline.module.css";
+import { useSession } from "next-auth/react";
+
+// Array of roles that can edit schedules
+const EDITOR_ROLES = ["SUPER_ADMIN", "COMPANY_ADMIN", "MANAGER", "TEAM_LEAD"];
 
 // TimelineHeader component to display hour labels
 const TimelineHeader = () => {
@@ -93,6 +97,15 @@ const TimelineHeader = () => {
 };
 
 export default function Page() {
+  // Get session data for role-based access control
+  const { data: session, status } = useSession();
+  
+  // Check if user has permission to edit schedules
+  const canEdit = useMemo(() => {
+    if (!session?.user?.role) return false;
+    return EDITOR_ROLES.includes(session.user.role);
+  }, [session]);
+
   // Fetch all employees with their shifts
   const { employees, loading, error } = useAllEmployeesShifts();
 
@@ -101,7 +114,7 @@ export default function Page() {
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
-  // Add state for read-only mode toggle
+  // Add state for read-only mode toggle, default to true
   const [readOnly, setReadOnly] = useState(true);
   
   // Animation state
@@ -217,11 +230,11 @@ export default function Page() {
   }, [employees, searchTerm, departmentFilter]);
 
   // Loading state with animation
-  if (loading) {
+  if (loading || status === "loading") {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-gray-600">Loading employee schedules...</p>
+        <p className="text-gray-600">Loading...</p>
       </div>
     );
   }
@@ -341,28 +354,35 @@ export default function Page() {
               )}
             </div>
             
-            {/* Mode toggle button - moved here */}
-            <button
-              onClick={() => setReadOnly(!readOnly)}
-              className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
-                readOnly 
-                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                  : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-              }`}
-              title={readOnly ? "Switch to edit mode" : "Switch to view mode"}
-            >
-              {readOnly ? (
-                <>
-                  <FiEdit className="mr-1.5" size={16} />
-                  <span>Edit</span>
-                </>
-              ) : (
-                <>
-                  <FiEye className="mr-1.5" size={16} />
-                  <span>View</span>
-                </>
-              )}
-            </button>
+            {/* Mode toggle button - only show if user has permission */}
+            {canEdit ? (
+              <button
+                onClick={() => setReadOnly(!readOnly)}
+                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                  readOnly 
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                    : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                }`}
+                title={readOnly ? "Switch to edit mode" : "Switch to view mode"}
+              >
+                {readOnly ? (
+                  <>
+                    <FiEdit className="mr-1.5" size={16} />
+                    <span>Edit</span>
+                  </>
+                ) : (
+                  <>
+                    <FiEye className="mr-1.5" size={16} />
+                    <span>View</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="px-3 py-2 rounded-md text-sm font-medium flex items-center bg-gray-100 text-gray-500 cursor-not-allowed">
+                <FiLock className="mr-1.5" size={16} />
+                <span>View Only</span>
+              </div>
+            )}
           </div>
         </div>
         
@@ -402,7 +422,7 @@ export default function Page() {
                         employee={employee}
                         currentMonday={currentMonday}
                         selectedDay={selectedDay}
-                        readOnly={readOnly}
+                        readOnly={!canEdit || readOnly} /* Only allow editing if user has permission AND edit mode is on */
                       />
                     </motion.div>
                   ))}

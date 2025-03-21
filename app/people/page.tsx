@@ -15,6 +15,10 @@ import {
   FiX, 
   FiUserPlus 
 } from "react-icons/fi";
+import { useSession } from "next-auth/react";
+
+// Array of roles that can add team members
+const ADMIN_ROLES = ["SUPER_ADMIN", "COMPANY_ADMIN", "MANAGER", "TEAM_LEAD"];
 
 interface User {
   id: string;
@@ -48,6 +52,14 @@ const cardVariants = {
 };
 
 export default function Team() {
+  // Get session data for role-based access control
+  const { data: session, status } = useSession();
+  
+  // Check if user has permission to add team members
+  const canAddMembers = Boolean(
+    session?.user?.role && ADMIN_ROLES.includes(session.user.role)
+  );
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -125,6 +137,15 @@ export default function Team() {
       .substring(0, 2);
   };
 
+  // Show loading state
+  if (loading || status === "loading") {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto">
       {/* Hero Section */}
@@ -159,12 +180,16 @@ export default function Team() {
               <FiFilter className="mr-1.5" />
               Filter
             </button>
-            <Link href="/account-management/invite">
-              <button className="bg-white hover:bg-opacity-90 text-blue-700 py-2 px-3 rounded-lg text-sm font-medium transition duration-200 flex items-center">
-                <FiUserPlus className="mr-1.5" />
-                Add Members
-              </button>
-            </Link>
+            
+            {/* Only show Add Members button for users with permission */}
+            {canAddMembers && (
+              <Link href="/account-management/invite">
+                <button className="bg-white hover:bg-opacity-90 text-blue-700 py-2 px-3 rounded-lg text-sm font-medium transition duration-200 flex items-center">
+                  <FiUserPlus className="mr-1.5" />
+                  Add Members
+                </button>
+              </Link>
+            )}
           </div>
         </div>
       </motion.div>
