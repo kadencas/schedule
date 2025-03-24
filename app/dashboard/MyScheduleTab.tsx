@@ -2,27 +2,13 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar } from "react-big-calendar";
-import { format, addDays, isToday, isTomorrow, differenceInMinutes, isAfter, isBefore } from "date-fns";
+import { format, addDays, isToday, isTomorrow, differenceInMinutes, isAfter, isBefore, addMonths } from "date-fns";
 import { Employee } from "@/types/types";
 import dynamic from "next/dynamic";
 import { 
   FiClock, 
-  FiCalendar, 
-  FiArrowRight, 
-  FiInfo, 
-  FiChevronRight, 
-  FiChevronLeft,
-  FiLogOut,
-  FiAlertCircle,
-  FiCheck,
-  FiUser,
-  FiMapPin,
-  FiBriefcase,
-  FiMail,
-  FiPhone,
-  FiEdit,
-  FiPlusCircle
 } from "react-icons/fi";
+import { RRule } from "rrule";
 
 // Dynamically import ScheduleBuilderComponent with SSR disabled
 const ScheduleBuilderComponent = dynamic(() => import("../individual-schedule-builder/page"), { ssr: false });
@@ -34,7 +20,6 @@ interface MyScheduleTabProps {
 }
 
 export default function MyScheduleTab({ employeeData, userName, localizer }: MyScheduleTabProps) {
-  const [selectedView, setSelectedView] = useState<"schedule" | "details">("schedule");
   const [showNextShifts, setShowNextShifts] = useState(true);
 
   const today = new Date();
@@ -123,17 +108,92 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
   const calendarEvents = useMemo(() => {
     if (!employeeData?.shifts) return [];
     
-    return employeeData.shifts.map((shift) => ({
-      title: `Shift: ${format(new Date(shift.startTime), "h:mm a")} - ${format(
-        new Date(shift.endTime),
-        "h:mm a"
-      )}`,
-      start: new Date(shift.startTime),
-      end: new Date(shift.endTime),
-      resource: shift.segments && shift.segments.length > 0 
-        ? `${shift.segments.length} activities` 
-        : "No activities"
-    }));
+    interface CalendarEvent {
+      title: string;
+      start: Date;
+      end: Date;
+      resource: string;
+    }
+    
+    let events: CalendarEvent[] = [];
+    
+    // Get the visible calendar range (3 months to be safe)
+    const calendarStart = new Date();
+    calendarStart.setDate(1); // Start of current month
+    const calendarEnd = addMonths(calendarStart, 3); // 3 months ahead
+    
+    employeeData.shifts.forEach((shift) => {
+      // For non-recurring shifts, add a single event
+      if (!shift.isRecurring || !shift.recurrenceRule) {
+        events.push({
+          title: `Shift: ${format(new Date(shift.startTime), "h:mm a")} - ${format(
+            new Date(shift.endTime),
+            "h:mm a"
+          )}`,
+          start: new Date(shift.startTime),
+          end: new Date(shift.endTime),
+          resource: shift.segments && shift.segments.length > 0 
+            ? `${shift.segments.length} activities` 
+            : "No activities"
+        });
+        return;
+      }
+      
+      // For recurring shifts, expand based on the recurrence rule
+      try {
+        // Get the start time of the shift to keep the time component
+        const shiftStartTime = new Date(shift.startTime);
+        const shiftEndTime = new Date(shift.endTime);
+        
+        // Duration of the shift in milliseconds
+        const shiftDuration = shiftEndTime.getTime() - shiftStartTime.getTime();
+        
+        // Parse the recurrence rule
+        const rule = RRule.fromString(shift.recurrenceRule);
+        
+        // Get all occurrences in the calendar view range
+        const occurrences = rule.between(calendarStart, calendarEnd, true);
+        
+        // Create an event for each occurrence
+        occurrences.forEach(date => {
+          // Create a new date with the same time as the original shift
+          const eventStart = new Date(date);
+          eventStart.setHours(
+            shiftStartTime.getHours(),
+            shiftStartTime.getMinutes(),
+            shiftStartTime.getSeconds()
+          );
+          
+          // Calculate the end time by adding the shift duration
+          const eventEnd = new Date(eventStart.getTime() + shiftDuration);
+          
+          events.push({
+            title: `Shift: ${format(eventStart, "h:mm a")} - ${format(eventEnd, "h:mm a")}`,
+            start: eventStart,
+            end: eventEnd,
+            resource: shift.segments && shift.segments.length > 0 
+              ? `${shift.segments.length} activities` 
+              : "No activities"
+          });
+        });
+      } catch (error) {
+        console.error("Error processing recurring shift:", error);
+        // Fallback to adding the original shift as a single event
+        events.push({
+          title: `Shift: ${format(new Date(shift.startTime), "h:mm a")} - ${format(
+            new Date(shift.endTime),
+            "h:mm a"
+          )}`,
+          start: new Date(shift.startTime),
+          end: new Date(shift.endTime),
+          resource: shift.segments && shift.segments.length > 0 
+            ? `${shift.segments.length} activities` 
+            : "No activities"
+        });
+      }
+    });
+    
+    return events;
   }, [employeeData?.shifts]);
 
   // Calculate weekly hours
@@ -208,187 +268,46 @@ export default function MyScheduleTab({ employeeData, userName, localizer }: MyS
         </div>
       </motion.div>
 
-      {/* View Selector */}
-      <div className="flex justify-center mb-6">
-        <div className="bg-gray-100 rounded-full p-1 inline-flex">
-          <button
-            onClick={() => setSelectedView("schedule")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              selectedView === "schedule" 
-                ? "bg-white shadow-sm text-blue-600" 
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Schedule
-          </button>
-          <button
-            onClick={() => setSelectedView("details")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              selectedView === "details" 
-                ? "bg-white shadow-sm text-blue-600" 
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Personal Details
-          </button>
-        </div>
-      </div>
-      
       <AnimatePresence mode="wait">
-        {selectedView === "schedule" ? (
+        <motion.div
+          key="schedule"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Schedule Builder Component */}
           <motion.div
-            key="schedule"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-
-
-
-      </div>
-
-            {/* Schedule Builder Component - Added here */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6"
-            >
-              <div className="schedule-builder-container">
-                <ScheduleBuilderComponent />
-              </div>
-            </motion.div>
-            
-            {/* Calendar Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.5 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-6"
-      >
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Monthly Calendar</h2>
-              <div className="calendar-container" style={{ height: 500 }}>
-        <Calendar
-          localizer={localizer}
-                  events={calendarEvents}
-          startAccessor="start"
-          endAccessor="end"
-                  views={["month", "week", "day"]}
-          popup
-                  className="modern-calendar"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="details"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-          >
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Personal Information</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <div className="bg-gray-50 rounded-lg p-5">
-                  <h3 className="text-lg font-medium text-gray-800 mb-4">Employee Details</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <FiUser className="mt-1 mr-3 text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500">Full Name</p>
-                        <p className="font-medium text-gray-800">{userName}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <FiBriefcase className="mt-1 mr-3 text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500">Department</p>
-                        <p className="font-medium text-gray-800">{employeeData.department || "Not specified"}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start">
-                      <FiMapPin className="mt-1 mr-3 text-gray-400" />
-                      <div>
-                        <p className="text-sm text-gray-500">Location</p>
-                        <p className="font-medium text-gray-800">{employeeData.location || "Not specified"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-6 bg-blue-50 rounded-lg p-5 border border-blue-100">
-                  <h3 className="text-lg font-medium text-blue-800 mb-4">Schedule Statistics</h3>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-3 border border-blue-100">
-                      <p className="text-sm text-gray-500">Total Shifts</p>
-                      <p className="text-xl font-semibold text-blue-700">{employeeData.shifts.length}</p>
-                    </div>
-                    
-                    <div className="bg-white rounded-lg p-3 border border-blue-100">
-                      <p className="text-sm text-gray-500">Avg. Hours/Week</p>
-                      <p className="text-xl font-semibold text-blue-700">
-                        {(thisWeekHours / 7 * 5).toFixed(1)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-5 h-full">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Additional Information</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Employee ID</p>
-                    <p className="font-medium text-gray-800">{employeeData.id}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">Contact</p>
-                    <div className="flex items-center space-x-2">
-                      <button className="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm font-medium flex items-center">
-                        <FiMail className="mr-1" size={14} />
-                        Email
-                      </button>
-                      <button className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm font-medium flex items-center">
-                        <FiPhone className="mr-1" size={14} />
-                        Call
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 mt-4 border-t border-gray-200">
-                    <p className="text-sm text-gray-500 mb-3">Quick Actions</p>
-                    <div className="space-y-2">
-                      <button className="w-full bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium flex items-center justify-between hover:bg-gray-50 transition-colors">
-                        Request time off
-                        <FiChevronRight size={16} />
-                      </button>
-                      <button className="w-full bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium flex items-center justify-between hover:bg-gray-50 transition-colors">
-                        Report availability
-                        <FiChevronRight size={16} />
-                      </button>
-                      <button className="w-full bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium flex items-center justify-between hover:bg-gray-50 transition-colors">
-                        Request shift swap
-                        <FiChevronRight size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="schedule-builder-container">
+              <ScheduleBuilderComponent />
             </div>
-      </motion.div>
-        )}
+          </motion.div>
+          
+          {/* Calendar Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          >
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Monthly Calendar</h2>
+            <div className="calendar-container" style={{ height: 500 }}>
+              <Calendar
+                localizer={localizer}
+                events={calendarEvents}
+                startAccessor="start"
+                endAccessor="end"
+                views={["month", "week", "day"]}
+                popup
+                className="modern-calendar"
+              />
+            </div>
+          </motion.div>
+        </motion.div>
       </AnimatePresence>
       
       {/* Custom styles for the calendar */}

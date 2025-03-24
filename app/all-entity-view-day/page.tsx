@@ -9,6 +9,7 @@ import { Shift, Employee, Entity } from "@/types/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiSearch, FiInfo, FiFilter, FiX } from "react-icons/fi";
 import styles from "@/app/individual-schedule-builder/styles/Timeline.module.css";
+import { useEntities } from "../individual-schedule-builder/hooks/useEntities";
 
 // TimelineHeader component to display hour labels
 const TimelineHeader = () => {

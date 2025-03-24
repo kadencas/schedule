@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import Timeline from "@/app/individual-schedule-builder/components/timeline";
 import { useShiftManagement } from "@/app/individual-schedule-builder/hooks/useShiftManagement";
-import { Employee, Shift, Segment } from "@/types/types";
+import { Employee, Shift, Segment, Entity } from "@/types/types";
 import { FiCalendar, FiMapPin, FiBriefcase } from "react-icons/fi";
 
 interface EmployeeTimelineProps {
@@ -9,6 +9,7 @@ interface EmployeeTimelineProps {
   currentMonday: Date;
   selectedDay: string;
   readOnly?: boolean;
+  entities: Entity[];
 }
 
 export default function EmployeeTimeline({
@@ -16,6 +17,7 @@ export default function EmployeeTimeline({
   currentMonday,
   selectedDay,
   readOnly = true,
+  entities,
 }: EmployeeTimelineProps) {
   const snapToGrid = true;
   const grid_height = 40; // Even more compact height
@@ -97,7 +99,7 @@ export default function EmployeeTimeline({
           readOnly={readOnly}
           selectedDay={selectedDay}
           onShiftSave={(shiftId, updatedData) => console.log('Shift save', shiftId, updatedData)}
-          entities={[]} // Empty array as entities are not needed in this view
+          entities={entities}
         />
         
         {/* Minimalist empty state */}

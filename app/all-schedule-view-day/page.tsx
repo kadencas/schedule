@@ -16,6 +16,8 @@ import { FiSearch, FiFilter, FiInfo, FiX, FiEdit, FiEye, FiLock } from "react-ic
 import { Employee } from "@/types/types";
 import styles from "@/app/individual-schedule-builder/styles/Timeline.module.css";
 import { useSession } from "next-auth/react";
+import { useEntities } from "../individual-schedule-builder/hooks/useEntities";
+
 
 // Array of roles that can edit schedules
 const EDITOR_ROLES = ["SUPER_ADMIN", "COMPANY_ADMIN", "MANAGER", "TEAM_LEAD"];
@@ -43,6 +45,7 @@ const TimelineHeader = () => {
       window.removeEventListener('resize', updateWidth);
     };
   }, []);
+
   
   const numTicks = Math.floor(containerWidth / 25) + 1;
   
@@ -99,6 +102,7 @@ const TimelineHeader = () => {
 export default function Page() {
   // Get session data for role-based access control
   const { data: session, status } = useSession();
+  const { entities: entities } = useEntities();
   
   // Check if user has permission to edit schedules
   const canEdit = useMemo(() => {
@@ -422,7 +426,8 @@ export default function Page() {
                         employee={employee}
                         currentMonday={currentMonday}
                         selectedDay={selectedDay}
-                        readOnly={!canEdit || readOnly} /* Only allow editing if user has permission AND edit mode is on */
+                        readOnly={!canEdit || readOnly}
+                        entities={entities} /* Only allow editing if user has permission AND edit mode is on */
                       />
                     </motion.div>
                   ))}

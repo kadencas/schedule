@@ -9,6 +9,7 @@ interface EntityTimelineProps {
   currentMonday: Date;
   selectedDay: string;
   userShifts: any[];
+  readOnly?: boolean; // Make readOnly optional
 }
 
 // Extend the Entity type to include the properties we're using
@@ -24,10 +25,10 @@ export default function EntityTimeline({
   currentMonday,
   selectedDay,
   userShifts,
+  readOnly = true, // Default to true but allow override
 }: EntityTimelineProps) {
   const snapToGrid = true;
   const grid_height = 40; // More compact height for minimalistic design
-  const readOnly = true;
   
   // Cast entity to ExtendedEntity to fix TypeScript errors
   const extendedEntity = entity as ExtendedEntity;
@@ -59,7 +60,8 @@ export default function EntityTimeline({
     entityName: entity.name,
     hasMatchingShift: !!matchingShift,
     matchingShiftId: matchingShift?.id,
-    segmentsCount: shiftSegments?.length || 0
+    segmentsCount: shiftSegments?.length || 0,
+    readOnly
   });
 
   // FIX: Check for segments in shiftSegments array rather than matchingShift
@@ -111,9 +113,9 @@ export default function EntityTimeline({
           entities={[entity]} // Pass the current entity as the only available entity
         />
         
-        {/* Minimalist empty state */}
+        {/* Minimalist empty state - now with pointer-events-none to allow interaction */}
         {!hasActivities && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center opacity-40">
               <FiCalendar className="mx-auto text-gray-300" size={12} />
               <p className="text-[8px] text-gray-400 mt-0.5">No activities</p>

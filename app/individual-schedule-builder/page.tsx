@@ -219,33 +219,30 @@ export default function Page() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Header with soft gradient */}
+      {/* Simplified Header */}
       <motion.div 
-        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-6 shadow-md"
+        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 shadow-sm"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        transition={{ duration: 0.4 }}
       >
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold mb-1 flex items-center">
+          <h1 className="text-lg font-medium flex items-center">
             <FiCalendar className="mr-2" />
             Schedule Builder
           </h1>
-          <p className="text-blue-100 text-sm max-w-2xl">
-            Create and manage your schedule by selecting days and adding shifts. Drag to move shifts, resize to adjust duration.
-          </p>
         </div>
       </motion.div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-3">
         <motion.div 
           variants={containerVariants}
           initial="hidden"
           animate={isMounted ? "visible" : "hidden"}
-          className="flex flex-col space-y-6"
+          className="flex flex-col space-y-2"
         >
           {/* Week Navigation */}
-          <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+          <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-sm p-3 border border-gray-100">
             <WeekDayToggle
               currentMonday={currentMonday}
               formattedMondayDate={formattedMondayDate}
@@ -257,22 +254,16 @@ export default function Page() {
           </motion.div>
 
           {/* Main Layout with Timeline and Shift Menu */}
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Timeline Section */}
+          <div className="flex flex-col md:flex-row gap-3">
+            {/* Timeline Section - Minimalistic */}
             <motion.div 
               variants={itemVariants}
-              className="flex-grow bg-white rounded-xl shadow-sm p-4 border border-gray-100 overflow-hidden"
+              className="flex-grow bg-white rounded-lg shadow-sm p-3 border border-gray-100 overflow-hidden"
             >
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                  <FiClock className="mr-2 text-blue-500" size={18} />
-                  Time Schedule
-                </h2>
-                <div className="flex items-center">
-                  <div className="flex items-center text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
-                    <FiGrid className="mr-1" size={12} />
-                    {snapToGrid ? "Snap On" : "Snap Off"}
-                  </div>
+              <div className="flex items-center justify-end mb-2">
+                <div className="flex items-center text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                  <FiGrid className="mr-1" size={10} />
+                  {snapToGrid ? "Snap to Grid" : "Free Movement"}
                 </div>
               </div>
               
@@ -297,16 +288,16 @@ export default function Page() {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="absolute inset-0 flex items-center justify-center text-center p-4"
+                    transition={{ delay: 0.4 }}
+                    className="absolute inset-0 flex items-center justify-center text-center"
                   >
-                    <div className="max-w-md">
-                      <div className="bg-blue-50 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
-                        <FiInfo className="text-blue-400" size={24} />
+                    <div className="max-w-md p-4">
+                      <div className="bg-blue-50 rounded-full w-10 h-10 mx-auto flex items-center justify-center mb-2">
+                        <FiInfo className="text-blue-400" size={18} />
                       </div>
-                      <h3 className="font-medium text-gray-700 mb-2">No Shift on {selectedDay}</h3>
-                      <p className="text-gray-500 text-sm mb-4">
-                        Click "Add Shift" in the options menu to create a new shift for this day.
+                      <h3 className="font-medium text-gray-600 text-sm">No shift on {selectedDay}</h3>
+                      <p className="text-gray-400 text-xs mt-1">
+                        Use the "Add Shift" button to create one
                       </p>
                     </div>
                   </motion.div>
@@ -314,17 +305,11 @@ export default function Page() {
               </div>
             </motion.div>
             
-            {/* Shift Menu */}
+            {/* Simplified Shift Menu */}
             <motion.div
               variants={itemVariants}
-              className="w-full md:w-72 bg-white rounded-xl shadow-sm border border-gray-100 p-4"
+              className="w-full md:w-60 bg-white rounded-lg shadow-sm border border-gray-100 p-3"
             >
-              <div className="mb-3">
-                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                  <FiCalendar className="mr-2 text-blue-500" size={18} />
-                  Shift Options
-                </h2>
-              </div>
               <ShiftMenu
                 matchingShift={matchingShift}
                 snapToGrid={snapToGrid}
