@@ -285,11 +285,37 @@ export function useEntityShiftManagement(
       const mappedSegments = combinedShift.segments.map((seg: any) => {
         const segStart = new Date(seg.startTime);
         const segEnd = new Date(seg.endTime);
+        
+        // FIXED: Normalize dates to the same day before calculating minute offsets
+        // This ensures segments on future days have proper positioning
+        const normalizedSegStart = new Date(segStart);
+        const normalizedSegEnd = new Date(segEnd);
+        const normalizedShiftStart = new Date(shiftStart);
+        
+        // Set all dates to the same day, keeping only their time components
+        normalizedSegStart.setFullYear(2000, 0, 1);
+        normalizedSegEnd.setFullYear(2000, 0, 1);
+        normalizedShiftStart.setFullYear(2000, 0, 1);
+        
+        console.log("Normalizing segment times:", {
+          original: {
+            segStart: segStart.toISOString(),
+            segEnd: segEnd.toISOString(),
+            shiftStart: shiftStart.toISOString()
+          },
+          normalized: {
+            segStart: normalizedSegStart.toISOString(),
+            segEnd: normalizedSegEnd.toISOString(),
+            shiftStart: normalizedShiftStart.toISOString()
+          }
+        });
+        
+        // Calculate minutes using normalized times
         const startMinutes = Math.round(
-          (segStart.getTime() - shiftStart.getTime()) / 60000
+          (normalizedSegStart.getTime() - normalizedShiftStart.getTime()) / 60000
         );
         const endMinutes = Math.round(
-          (segEnd.getTime() - shiftStart.getTime()) / 60000
+          (normalizedSegEnd.getTime() - normalizedShiftStart.getTime()) / 60000
         );
           
           // Include the user in the mapped segment

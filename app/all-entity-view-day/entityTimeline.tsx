@@ -54,9 +54,17 @@ export default function EntityTimeline({
     initialX,
     initialWidth,
   } = useEntityShiftManagement(userShifts, entityShifts, currentMonday, selectedDay);
+  
+  console.log("ENTITY TIMELINE RESULTS:", {
+    entityName: entity.name,
+    hasMatchingShift: !!matchingShift,
+    matchingShiftId: matchingShift?.id,
+    segmentsCount: shiftSegments?.length || 0
+  });
 
-  // Check if there are any segments/activities for this entity today
-  const hasActivities = matchingShift && matchingShift.segments && matchingShift.segments.length > 0;
+  // FIX: Check for segments in shiftSegments array rather than matchingShift
+  // This ensures we display activities when we have processed segments ready to render
+  const hasActivities = shiftSegments && shiftSegments.length > 0;
 
   return (
     <div className="relative overflow-visible flex items-stretch">

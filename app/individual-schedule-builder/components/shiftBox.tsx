@@ -87,6 +87,8 @@ const ShiftBox: React.FC<ShiftBoxProps> = ({
 
   const grid: [number, number] | undefined = snapToGrid ? [25, 25] : undefined;
 
+  console.log("localSegments in shiftBox", localSegments);
+
   const handleRecurrenceChange = (newRule: string | null, recurring: boolean) => {
     setLocalIsRecurring(recurring);
     // Use an empty string or null as per backend expectations

@@ -83,6 +83,8 @@ export default function Timeline({
     });
   };
 
+  console.log("shiftSegments in timeline", shiftSegments);
+
   const currentTimePosition = getCurrentTimePosition();
 
   return (
@@ -116,6 +118,8 @@ export default function Timeline({
           <div className={styles.currentTimeIndicatorDot} />
         </div>
       )}
+
+      
       
       {/* Render the shift box */}
       {matchingShift && (
